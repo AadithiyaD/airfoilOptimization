@@ -1,0 +1,12 @@
+NACA
+3413
+OPER
+VISC 250000
+SEQP
+PACC
+./data/output/NACA3413Polar.txt
+
+ASEQ 0 15 1
+PACC
+
+QUIT
