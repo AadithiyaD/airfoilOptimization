@@ -2,12 +2,13 @@ import os
 import subprocess
 import numpy as np
 from scipy.optimize import differential_evolution
-from xfoil_runner import xFoil
+from airfoilTools import xFoil
 
 """
 Optimizes a given airfoil for max L/D. Currently works with NACA 4-digit parametrization
 """
 
+#! Need to reformat to for PARSEC foils
 
 # Specify digits of NACA airfoil
 max_camber = 0
@@ -15,8 +16,6 @@ max_camber_loc = 0
 max_thickness = 12
 
 # Create params list
-#! I do realize that this setup does not handle the NACA0009 foil, but I 
-#! don't want to support it anyway, since I know it'll be worse than the base
 params = [max_camber, max_camber_loc, max_thickness]
 
 # Define objective. Here, we want to max L/D, so at the end return - L/D peak, so that we
