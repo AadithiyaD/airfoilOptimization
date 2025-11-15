@@ -14,11 +14,13 @@ Next Steps -
 - [x] First, I need to create a function for running xfoil and saving the outputs
 - [x] Think how to parametrize and modify airfoil
     - For V1 i'll start with the xfoil's built-in NACA gen
-- [ ] Implement a more comprehensive airfoil parametrization method for V2
+- [x] Implement a more comprehensive airfoil parametrization method for V2
     - [x] Parsec method formulae implemented
     - [x] Need to add cosine spacing
     - [x] Need to add dat file write
-- [ ] Cleanup xfoil runner function
+- [ ] Rewrite the main airfoilOpt.py to support multiple parametrizations
+    - parsecOpt.py has PARSEC implemented
+- [ ] Implement some cleanups and refactors for clarity and maintainabilty
 
 
 # References

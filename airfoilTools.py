@@ -16,7 +16,7 @@ def writeAirfoil(x: np.ndarray, y: np.ndarray, airfoil_header: str, coeffs: dict
                 set to empty string
     """
     # If coeffs not specified, keep it empty for file saves
-    coeff_str = f"{coeffs}" if coeffs else ""
+    coeff_str = f"{coeffs}" if any(coeffs) else ""
     
     # Ensure output path exisits and constsruct full filname with path
     os.makedirs(out_path, exist_ok=True)
@@ -33,7 +33,7 @@ def writeAirfoil(x: np.ndarray, y: np.ndarray, airfoil_header: str, coeffs: dict
     
     print(f"{airfoil_header} written to {full_filepath}")
 
-def parsec(input_coeffs: dict):
+def parsec(input_coeffs: list):
     """
         Uses the PARSEC method of airfoil parametrization to generate an airfoil.
         This is formula is shown in: Della Vecchia et al. (2013)
@@ -56,19 +56,19 @@ def parsec(input_coeffs: dict):
             "beta_te"       => TE wedge angle
     """
     # Initialize variables
-    r_le = input_coeffs['r_le']
-    X_up = input_coeffs['X_up']
-    Z_up = input_coeffs['Z_up']
-    Z_XXup = input_coeffs['Z_XXup']
+    r_le = input_coeffs[0]
+    X_up = input_coeffs[1]
+    Z_up = input_coeffs[2]
+    Z_XXup = input_coeffs[3]
     
-    X_lo = input_coeffs['X_lo']
-    Z_lo = input_coeffs['Z_lo']
-    Z_XXlo = input_coeffs['Z_XXlo']
+    X_lo = input_coeffs[4]
+    Z_lo = input_coeffs[5]
+    Z_XXlo = input_coeffs[6]
     
-    Z_te = input_coeffs['Z_te']
-    delta_Z_te = input_coeffs['delta_Z_te']
-    alpha_te = input_coeffs['alpha_te']
-    beta_te = input_coeffs['beta_te']
+    Z_te = input_coeffs[7]
+    delta_Z_te = input_coeffs[8]
+    alpha_te = input_coeffs[9]
+    beta_te = input_coeffs[10]
     
     # Setup system of equations and solve them
     # We first need to solve a set of equations of the form
@@ -117,8 +117,8 @@ def parsec(input_coeffs: dict):
     # Calc upper and lower points, with normalized chord 0 to 1
     # X[0] to X[5] correspond to the coefficients in a_up(lo)
     # Uniform and cosing spacing available
-    # x_upperPts = np.linspace(0, 1, 101) 
-    x_upperPts = 0.5 * (1 - np.cos(np.linspace(0, np.pi, 101))) # Calc x points with cosine spacing
+    # x_upperPts = np.linspace(0, 1, 51) 
+    x_upperPts = 0.5 * (1 - np.cos(np.linspace(0, np.pi, 51))) # Calc x points with cosine spacing
     y_upperPts = (X_upper[0]*x_upperPts**(1/2) + 
                     X_upper[1]*x_upperPts**(3/2) + 
                     X_upper[2]*x_upperPts**(5/2) + 
@@ -127,8 +127,8 @@ def parsec(input_coeffs: dict):
                     X_upper[5]*x_upperPts**(11/2)
                     ) 
     
-    #x_lowerPts = np.linspace(0, 1, 101) 
-    x_lowerPts = 0.5 * (1 - np.cos(np.linspace(0, np.pi, 101)))
+    #x_lowerPts = np.linspace(0, 1, 51) 
+    x_lowerPts = 0.5 * (1 - np.cos(np.linspace(0, np.pi, 51)))
     y_lowerPts = (X_lower[0]*x_lowerPts**(1/2) + 
                     X_lower[1]*x_lowerPts**(3/2) + 
                     X_lower[2]*x_lowerPts**(5/2) + 
@@ -186,7 +186,7 @@ def xFoil(params: list, airfoil_name:str ="", mode: str="NACA"):
             commands.write(f"VISC {Re}\n")
             #commands.write("SEQP\n")
             commands.write("PACC\n")
-            commands.write(f"./data/output/NACA{naca_code}Polar.txt\n")
+            commands.write(f"./data/output/{naca_code}Polar.txt\n")
             commands.write("\n")
             commands.write(f"ASEQ {alpha_sequence[0]} {alpha_sequence[1]} {alpha_sequence[2]}\n")
             commands.write("PACC\n\n")
@@ -196,7 +196,7 @@ def xFoil(params: list, airfoil_name:str ="", mode: str="NACA"):
     elif mode == "PARSEC":
         # For info on PARSEC parametrization, visit parsec() fn
         airfoil_dir = "data/airfoils/"
-        parsec_airfoil_path = os.path.join(airfoil_dir, airfoil_name)
+        parsec_airfoil_path = os.path.join(airfoil_dir, airfoil_name + ".dat")
         
         # Similar sequence to NACA mode
         if os.path.exists(f"./data/output/{airfoil_name}Polar.txt"):
