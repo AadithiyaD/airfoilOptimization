@@ -9,6 +9,11 @@ Requires Xfoil. Can be installed through ```sudo apt install xfoil```. Here, I w
 -------
 V1 has been done. airfoilOpt.py can be run and will maximize L/D using NACA 4-digit parametrization.
 
+20-11-25
+--------
+V2 has been done. We can now use parsec parametrization, and can run a script in the end to view evolution
+of L/D throughout the optimization
+
 
 Next Steps - 
 - [x] First, I need to create a function for running xfoil and saving the outputs
@@ -26,7 +31,7 @@ Next Steps -
     - [x] Classes in airfoilTools.py
 - [x] Rewrite the main airfoilOpt.py to support multiple parametrizations
     - ~parsecOpt.py has PARSEC implemented~
-- [] Better file handling
+- [x] Better file handling
 
 
 
