@@ -1,4 +1,5 @@
 numpy
+pandas
 bayesian-optimization
 PyFoam
 # scikit-optimize #This reqs numpy 1.24, bayes-opt needs numpy 2

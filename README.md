@@ -18,14 +18,15 @@ Next Steps -
     - [x] Parsec method formulae implemented
     - [x] Need to add cosine spacing
     - [x] Need to add dat file write
-- [] Implement some cleanups and refactors for clarity and maintainabilty
-    - [] Dataclass for parsec param handling
-    - [] dict for parsec param inputs
-    - [] Parallel safe objective function
-    - [] Programmatically generate bounds for optimizer
-    - [] Classes in airfoilTools.py
-- [] Rewrite the main airfoilOpt.py to support multiple parametrizations
-    - parsecOpt.py has PARSEC implemented
+- [x] Implement some cleanups and refactors for clarity and maintainabilty
+    - [x] Dataclass for parsec param handling
+    - [x] dict for parsec param inputs
+    - [x] Parallel safe objective function
+    - [x] Programmatically generate bounds for optimizer
+    - [x] Classes in airfoilTools.py
+- [x] Rewrite the main airfoilOpt.py to support multiple parametrizations
+    - ~parsecOpt.py has PARSEC implemented~
+- [] Better file handling
 
 
 

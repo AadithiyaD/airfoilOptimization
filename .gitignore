@@ -2,3 +2,8 @@
 test.py
 rewrite.py
 *.dat
+
+# Venv and cache
+.venv/
+__pycache__/
+*.pyc
