@@ -201,18 +201,15 @@ class Airfoil:
                 return
         
         
-    def xfoil_analysis(self, mode: str):
+    def xfoil_analysis(self, mode: str, Re: int = 250000, alpha_sequence: list = [0, 15, 1]):
             """
         Runs xfoil with a txt file input. Programmaticaly generates the txt input
         
         Args:
-            params == list containing parameters of airfoil. For NACA based gen,
-                list must be formatted as = [first_digit, second_digit, third_and_fourth_digit]
-                mode == 'NACA' or 'PARSEC'. Default NACA based gen
+            mode => NACA or PARSEC airfoil parametrization
+            Re => Reynolds number, default = 250000
+            alpha_sequence => [start, end, increment] AoA for analysis, default = [0, 15, 1]
             """
-            Re = 250000
-            alpha_sequence = [0, 15, 1]
-    
             # Initial inputs
             # Alpha sequence is [start, end, increment]
             if mode == "NACA":

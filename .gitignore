@@ -7,3 +7,10 @@ rewrite.py
 .venv/
 __pycache__/
 *.pyc
+
+
+# Files from the script
+*.bl
+xfoilCommands*.txt
+./data/airfoils/*.dat
+./data/airfoils/*.txt

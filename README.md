@@ -5,6 +5,11 @@ optimizer setup for XFOIL
 
 Requires Xfoil. Can be installed through ```sudo apt install xfoil```. Here, I will first do a simple L/D maximizer. 
 
+Usage
+-----
+Run airfoilOpt.py
+-----
+
 8-11-25
 -------
 V1 has been done. airfoilOpt.py can be run and will maximize L/D using NACA 4-digit parametrization.
@@ -32,9 +37,3 @@ Next Steps -
 - [x] Rewrite the main airfoilOpt.py to support multiple parametrizations
     - ~parsecOpt.py has PARSEC implemented~
 - [x] Better file handling
-
-
-
-# References
-
-Della Vecchia, P., Daniele, E., & DʼAmato, E. (2013). An airfoil shape optimization technique coupling PARSEC parameterization and evolutionary algorithm. Aerospace Science and Technology, 32(1), 103–110. https://doi.org/10.1016/j.ast.2013.11.006

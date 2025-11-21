@@ -31,7 +31,7 @@ def objective_function(input: np.ndarray):
         
         airfoil_name = f"NACA{naca_params[0]}{naca_params[1]}{naca_params[2]}"
         airfoil_obj = Airfoil(airfoil_name, nacaCode=naca_params, pid=worker_id)
-        airfoil_obj.xfoil_analysis(mode="NACA")
+        airfoil_obj.xfoil_analysis(mode="NACA", Re=250000, alpha_sequence=[0, 15, 1])
         
     elif airfoil_parametrization_mode == "PARSEC":
         # SciPy optimizers will pass in the params as ndarrays
@@ -40,7 +40,7 @@ def objective_function(input: np.ndarray):
             params = parsecParams.from_array(input)
             airfoil_name = "PARSEC_foil"
             airfoil_obj = Airfoil(airfoil_name, params=params, pid=worker_id)
-            airfoil_obj.xfoil_analysis(mode="PARSEC")
+            airfoil_obj.xfoil_analysis(mode="PARSEC", Re=250000, alpha_sequence=[0, 15, 1])
         
         except TypeError:
             return 1e6    
