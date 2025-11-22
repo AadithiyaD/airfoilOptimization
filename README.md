@@ -37,3 +37,4 @@ Next Steps -
 - [x] Rewrite the main airfoilOpt.py to support multiple parametrizations
     - ~parsecOpt.py has PARSEC implemented~
 - [x] Better file handling
+- [] Optimization workflow verification

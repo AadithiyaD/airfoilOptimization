@@ -11,15 +11,6 @@ from airfoilTools import *
 Optimizes a given airfoil for max L/D. Currently works with NACA 4-digit and PARSEC parametrization
 """
 
-history_dir = "data/history/"
-log_file_path = "data/optimization_datalog.csv"
-
-# Setup counter for file management
-eval_counter = multiprocessing.Value("i", 0)
-
-# Set airfoil parametrization mode. PARSEC or NACA available
-airfoil_parametrization_mode = "PARSEC"
-
 # Define objective. Here, we want to max L/D, so at the end return - L/D peak, so that we
 # can use a minimizing optimizer
 # i.e min(-peak_efficiency) == max(+peak_efficiency)
@@ -98,9 +89,18 @@ def save_bestFoil(paramBest, convergence):
     
     print(f"saved {best_foil.dat_file}")
     
-
-       
+    
+           
 if __name__ == "__main__":
+    history_dir = "data/history/"
+    log_file_path = "data/optimization_datalog.csv"
+
+    # Setup counter for file management
+    eval_counter = multiprocessing.Value("i", 0)
+
+    # Set airfoil parametrization mode. PARSEC or NACA available
+    airfoil_parametrization_mode = "PARSEC"
+    
     if airfoil_parametrization_mode == "PARSEC":
         param_centralDefs = {
             'r_le':     {'default': 0.015,  'bounds': (0.0012, 0.018)},

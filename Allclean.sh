@@ -1,4 +1,4 @@
-REM Script to clean up workspace after an optimization run
+# Script to clean up workspace after an optimization run
 rm ./data/output/*.txt
 rm ./data/airfoils/*.dat
 rm *.bl

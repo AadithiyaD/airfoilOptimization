@@ -7,7 +7,7 @@ rewrite.py
 .venv/
 __pycache__/
 *.pyc
-
+.vscode/
 
 # Files from the script
 *.bl
