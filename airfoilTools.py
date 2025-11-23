@@ -68,8 +68,11 @@ class Airfoil:
             self.x = None
             self.y = None
                 
-        # Set default efficiency to a penalty value
-        self.peak_efficiency = 1e6
+        # Set default aero data to empty lists
+        self.cl = []
+        self.cd = []
+        self.aoa = []
+        self.efficiency = []
         
     def _gen_coords(self):
             """
@@ -217,11 +220,10 @@ class Airfoil:
                     naca_code = f"{self.nacaCode[0]}{self.nacaCode[1]}{self.nacaCode[2]}"
                 else:
                     print(f"Invalid NACA code == {self.nacaCode}")
-                    self.peak_efficiency = 1e6
                     return
                                 
                 # Check if previous save file exists and delete it
-                if os.path.exists(self.polar_file):
+                if Path(self.polar_file).exists():
                     os.remove(self.polar_file)
                     
                 # Create commands
@@ -242,7 +244,7 @@ class Airfoil:
             elif mode == "PARSEC":
                 self.write_dat_file()
                 
-                if os.path.exists(self.polar_file):
+                if Path(self.polar_file).exists():
                     os.remove(self.polar_file)
                     
                 # Create commands
@@ -260,39 +262,33 @@ class Airfoil:
                     commands.write("QUIT\n")
         
             else:
-                return "mode must be set to NACA or PARSEC for now"
+                print("Mode must be set to NACA or PARSEC")
+                return
             
-            # Run xfoil and get result
+            # Run xfoil and process results
             subprocess.call(f"xfoil < xfoilCommands{self.pid}.txt", shell=True)            
-            self.peak_efficiency = self._process_results()
-    
+            
+            self._process_results()
+
     def _process_results(self):
         """
-            Process the xfoil results and return max L/D as -ve
+            Sets AoA, Cl, Cd, L/D data. If polar data file does not exist, return empty list
         """
-        if os.path.exists(self.polar_file):
+        if Path(self.polar_file).exists():
             data = np.genfromtxt(self.polar_file, skip_header=12)
             
-            # If data is written but empty, return penalty
-            if data.size == 0:
-                return 1e6
-
-            # If only one AoA converges, skip
-            elif len(data.shape) == 1:
-                print (f"{self.name}: Only one AoA converged, skipping")
-                return 1e6
+            if data.size == 0 or len(data.shape) == 1:
+               return
             
-            cl_data = data[:, 1]
-            cd_data = data[:, 2]
+            self.aoa = data[:, 0]
+            self.cl  = data[:, 1]
+            self.cd  = data[:, 2]
+            self.efficiency = self.cl / self.cd
             
-            efficiency_data = cl_data / cd_data
-            peak_efficiency = np.max(efficiency_data)
-            
-            return -peak_efficiency
-
         else:
-            return 1e6
-    
+            return
+            
+
     def cleanup(self):
         """
             Deletes dat file and xfoil commands file

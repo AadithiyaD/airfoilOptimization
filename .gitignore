@@ -2,6 +2,7 @@
 test.py
 rewrite.py
 *.dat
+randomFiles/
 
 # Venv and cache
 .venv/
