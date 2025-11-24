@@ -13,5 +13,7 @@ __pycache__/
 # Files from the script
 *.bl
 xfoilCommands*.txt
-./data/airfoils/*.dat
-./data/airfoils/*.txt
+/data/temp/*.dat
+data/temp/*.txt
+data/final_output/*.dat
+data/final_output/*.txt

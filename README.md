@@ -14,8 +14,11 @@ Requirements
 
 ```pip install -r requirements.txt```
 
-Requires XFOIL and Xlaunch. Can be installed through ```sudo apt install xfoil```, and 
-Xlaunch from its website.
+Requires XFOIL, xvfb and Xlaunch. Can be installed through 
+```sudo apt-get update```
+```sudo apt-get install xvfb```
+```sudo apt install xfoil```
+, and Xlaunch from its website.
 
 8-11-25
 -------
@@ -47,9 +50,14 @@ Next Steps -
     - I know Xfoil is verified, and I know the optimizer is also verified. The results now depend on my bounds
 - [] Multi objective optimize
     - Optimize for widest operation zone
-- [] Parallel execution of monitor.py and airfoilOpt.py
+- [x] Parallel execution of monitor.py and airfoilOpt.py
     - As it stands, xfoil "hijacks" the terminal and prevents the execution of any other scripts
 - [] Script to plot airfoils and aero polars
 - [] Check how other optimization algorithms perform
 - [] Multi element airfoil optimization
     - Probably best to use JavaFoil for this
+
+
+#! NEW PROBLEM
+- PARSEC mode - after a while it just seems to shit itself and not try new searches that actually work
+    Same for naca sa well

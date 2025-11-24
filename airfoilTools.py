@@ -1,7 +1,7 @@
-import subprocess
 import os
-from pathlib import Path
 import numpy as np
+import subprocess
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional
 
@@ -56,8 +56,8 @@ class Airfoil:
         self.pid = pid
         self.nacaCode = nacaCode if nacaCode is not None else []
         
-        self.dat_file = Path(f"data/airfoils/{name}{pid}.dat")
-        self.polar_file = Path(f"data/output/{name}{pid}Polar.txt")
+        self.dat_file = Path(f"data/temp/{name}_pid{pid}.dat")
+        self.polar_file = Path(f"data/temp/{name}_pid{pid}Polar.txt")
 
         # If PARSEC params is used, gen x and y coords
         if params is not None:
@@ -213,8 +213,11 @@ class Airfoil:
             Re => Reynolds number, default = 250000
             alpha_sequence => [start, end, increment] AoA for analysis, default = [0, 15, 1]
             """
-            # Initial inputs
-            # Alpha sequence is [start, end, increment]
+            # Path for the xfoil commands txt file
+            commands_path = f"xfoilCommands{self.pid}.txt"
+            individual_log_path = Path(f"xfoil_log_{self.pid}.txt")
+            
+            
             if mode == "NACA":
                 if len(self.nacaCode) == 3:
                     naca_code = f"{self.nacaCode[0]}{self.nacaCode[1]}{self.nacaCode[2]}"
@@ -227,7 +230,7 @@ class Airfoil:
                     os.remove(self.polar_file)
                     
                 # Create commands
-                with open(f"xfoilCommands{self.pid}.txt", "w") as commands:
+                with open(commands_path, "w") as commands:
                     commands.write("NACA\n")
                     commands.write(f"{naca_code}\n")
                     commands.write("OPER\n")
@@ -248,7 +251,7 @@ class Airfoil:
                     os.remove(self.polar_file)
                     
                 # Create commands
-                with open(f"xfoilCommands{self.pid}.txt", "w") as commands:
+                with open(commands_path, "w") as commands:
                     commands.write("LOAD\n")
                     commands.write(f"{self.dat_file}\n")
                     commands.write("OPER\n")
@@ -265,9 +268,32 @@ class Airfoil:
                 print("Mode must be set to NACA or PARSEC")
                 return
             
+        
             # Run xfoil and process results
-            subprocess.call(f"xfoil < xfoilCommands{self.pid}.txt", shell=True)            
+            #subprocess.call(f"xfoil < xfoilCommands{self.pid}.txt", shell=True)            
+            try:
+                with open(individual_log_path, "w") as log_file:
+                    with open(commands_path, "r") as xfoil_commands:
+                        process = subprocess.Popen(
+                            ["xfoil"],
+                            stdin=xfoil_commands,
+                            stdout=log_file,
+                            stderr=subprocess.STDOUT
+                        )
+
+                        process.wait(timeout=30)
             
+            except subprocess.TimeoutExpired:
+                print(f"XFOIL timed out for {self.name}")
+                process.kill() # kill the runaway process
+            
+            except FileNotFoundError:
+                 print(f"XFOIL executable not found. Make sure it's in system's PATH.")
+            
+            except Exception as e:
+                # Catch other potential errors, like from check=True
+                print(f"XFOIL failed for {self.name}: {e}")  
+                
             self._process_results()
 
     def _process_results(self):
