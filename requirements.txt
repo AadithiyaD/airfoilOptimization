@@ -7,3 +7,8 @@ scikit-learn
 scipy
 joblib
 matplotlib
+plotly
+kaleido
+ipykernel
+nbformat
+anywidget>=0.9.13

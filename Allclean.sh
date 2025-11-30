@@ -3,7 +3,15 @@ rm ./data/temp/*.txt
 rm ./data/temp/*.dat
 rm ./data/final_output/*.dat
 rm ./data/final_output/*.txt
+rm ./postProcess_data/*.dat
+rm ./postProcess_data/*.txt
+
 rm *.bl
 rm xfoil*.txt
+rm *.png
+
+
+
+cp -r postProcess_data/sampleData/. postProcess_data
 
 sed -i '1!d' ./data/optimization_datalog.csv

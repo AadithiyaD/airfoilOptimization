@@ -1,23 +1,36 @@
 import os
-import csv
-import shutil
 import time
+import threading
 import numpy as np
 import multiprocessing
+import pickle
 from pathlib import Path
-from scipy.optimize import differential_evolution
 from airfoilTools import *
+import subprocess
+from multiprocessing.pool import ThreadPool
+from pymoo.optimize import minimize
+from pymoo.core.problem import ElementwiseProblem
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.operators.crossover.sbx import SBX
+from pymoo.operators.mutation.pm import PM
+from pymoo.operators.sampling.rnd import FloatRandomSampling
+from pymoo.parallelization.starmap import StarmapParallelization
+from pymoo.operators.repair.rounding import RoundingRepair
+from pymoo.operators.sampling.rnd import IntegerRandomSampling
+
 
 """
-Optimizes a given airfoil for max L/D. Currently works with NACA 4-digit and PARSEC parametrization
+Multi-objective airfoil optimizer using NSGA2 with XFOIL evaluation.
+Supports NACA 4-digit and PARSEC parametrization.
+Can optimize for: Cl, Cd, L/D and window (operational range). Case sensitive.
 """
 
-# Configs are put here because of a quirk with the way multiprocessing works with diff evo
-# If you put these in the _main_ block, diff evo won't see them and crash
+# Configs are put here because of a quirk with the way multiprocessing works
+# If you put these in the _main_ block, pymoo won't see them and crash
 # *************************** Configs ***************************
 # Set paths
-final_otuput_dir = Path("data/final_output")
-final_otuput_dir.mkdir(parents=True, exist_ok=True)
+final_output_dir = Path("data/final_output")
+final_output_dir.mkdir(parents=True, exist_ok=True)
 log_file_path = Path("data/optimization_datalog.csv")
 
 # Setup counter for file management
@@ -25,215 +38,100 @@ eval_counter = multiprocessing.Value("i", 0)
 
 # Set optimization parameters
 airfoil_parametrization_mode = "NACA" # PARSEC or NACA
-modality = "single" # single or multi
+moo_objectives = ["window", "Cl"] 
 
-singleVar_opt = "Cl" # Cl, Cd, L/D
-multiVar_opt = ["window", "Cl"] # window, Cl, Cd, L/D
-# ***************************************************************
+# ******************** pymoo problem class defs ********************
+class airfoilOptProblem(ElementwiseProblem):
+    def __init__(self, xl, xu, baseline_data=None, **kwargs):
+        """
+        xl => lower bounds, np.ndarray
+        xu => upper bounds, np.ndarray
+        baseline_data => Dict or np.ndarray containing baseline
+                        max_Cl and window (or whatever 2 params you care about)
+                        for nomralization
+        """
+            
+        super().__init__(n_var = len(xl),
+                         n_obj = 2,
+                         n_ieq_constr = 0,
+                         xl = xl,
+                         xu = xu,
+                         elementwise_evaluation=True, **kwargs)
+        self.baseline_data = baseline_data if baseline_data else {'Cl': 1.2, 'Window': 4.0}
 
-def objective_function(input: np.ndarray):
-    worker_id = os.getpid()
-    
-    # Init as penalty, for error handling purposes
-    score = 1e6
-    
-    # Counter increment
-    with eval_counter.get_lock():
-        eval_counter.value += 1
-        current_count = eval_counter.value    
+    def _evaluate(self, x, out, *args, **kwargs):
+        """
+        Handles eval of one indidividual 'x' (array of 11 params)
+        pymoo does the looping / parallelization
+        """
+        worker_id = os.getpid() * 1000 + (threading.get_ident() % 1000)
         
-    try:
-        # Main airfoil evaluation block
-        if airfoil_parametrization_mode == "NACA":
-            naca_params = np.round(input).astype(int)
-            airfoil_name = f"NACA{naca_params[0]}{naca_params[1]}{naca_params[2]}"
-            airfoil_obj = Airfoil(airfoil_name, nacaCode=naca_params, pid=worker_id)
-            airfoil_obj.xfoil_analysis(mode="NACA", Re=250000, alpha_sequence=[0, 20, 0.5])
-            
-        elif airfoil_parametrization_mode == "PARSEC":
-            # SciPy optimizers will pass in the params as ndarrays
-            # So, convert input them back to parsecParams
-            params = parsecParams.from_array(input)
-            airfoil_name = "PARSEC_foil"
-            airfoil_obj = Airfoil(airfoil_name, params=params, pid=worker_id)
-            airfoil_obj.xfoil_analysis(mode="PARSEC", Re=250000, alpha_sequence=[0, 20, 0.5])
-            
-        else:
-            print(f"Invalid mode {airfoil_parametrization_mode} specified. Must be 'NACA' or 'PARSEC'")
-            return 1e6
+        try:
+            name = "MOO_eval"
+            # Support both PARSEC and NACA parametrizations
+            if airfoil_parametrization_mode == "PARSEC":
+                params = parsecParams.from_array(x)
+                foil = Airfoil(name, params=params, pid=worker_id)
+                mode = "PARSEC"
 
-        # Extract data
-        aoa_data = airfoil_obj.aoa
-        cl_data = airfoil_obj.cl
-        cd_data = airfoil_obj.cd
-        efficiency_data= airfoil_obj.efficiency
-    
-        missing_data = (np.size(aoa_data) == 0 or
-                        np.size(cl_data) == 0 or
-                        np.size(cd_data) == 0 or
-                        np.size(efficiency_data) == 0)
-        
-        # Proceed with scoring only if no data is missing
-        if not missing_data:
-            # Scoring logic
-            if modality == "single":
-                if singleVar_opt == "L/D":
-                    score = -np.max(efficiency_data)
-                
-                elif singleVar_opt == "Cl":
-                    score = -np.max(cl_data)
-                
-                elif singleVar_opt == "Cd":
-                    score = np.min(cd_data)
-                else:
-                    print("Invalid singleVar_opt specified. Must be 'L/D', 'Cl', or 'Cd'")
-                
-            elif modality == "multi":
-                # initialize data from baselineData.csv into variables
-                baselineData = np.genfromtxt("./baselineData.csv", delimiter=",")
-                aoa_baseline = baselineData[:, 0]
-                cl_baseline = baselineData[:, 1]
-                cd_baseline = baselineData[:, 2]
-                efficiency_baseline = baselineData[:, 3]
+            elif airfoil_parametrization_mode == "NACA":
+                # NACA expects integer 4-digit-like inputs (m, p, t)
+                naca_params = np.round(x).astype(int)
+                foil = Airfoil(name, nacaCode=naca_params, pid=worker_id)
+                mode = "NACA"
 
-                # Set weights for each var
-                # Init to 0 so that it doesnt break the final score construction
-                wt_cl = 0.5 if "Cl" in multiVar_opt else 0.0
-                wt_cd = 0.2 if "Cd" in multiVar_opt else 0.0
-                wt_eff = 0.4 if "L/D" in multiVar_opt else 0.0
-                wt_window = 1.0 if "window" in multiVar_opt else 0.0
-                
-                # Calculate window score        
-                """
-                    Logic for assessing window of operation:
-                    check if Cl values to the left and right are within 90% of the max Cl
-                    if yes, keep checking left and right, and add 1 to window_score_count for each hit
-                """
-                max_cl_idx = int(np.argmax(cl_data))
-                window_score_count = 0
-                threshold = 0.9 * np.max(cl_data)
-                
-                idx_right = max_cl_idx + 1
-                idx_left = max_cl_idx - 1 
-                
-                while idx_right < len(cl_data) and cl_data[idx_right] >= threshold:
-                    window_score_count += 1
-                    idx_right += 1
-                
-                while idx_left >= 0 and cl_data[idx_left] >= threshold:
-                    window_score_count += 1
-                    idx_left -= 1
-                    
-                # Normalize each variable w.r.t the baseline
-                # Normalize window score w.r.t target operational window
-                normalized_cl_max = np.max(cl_data) / np.max(cl_baseline) 
-                normalized_cd_min = np.min(cd_data) / np.min(cd_baseline) 
-                normalized_efficiency_max = np.max(efficiency_data) / np.max(efficiency_baseline) 
-                normalized_window_score = window_score_count / 10
-                
-                # Construct score and return
-                score = -((wt_cl * normalized_cl_max)
-                        + (wt_cd * (1.0 / normalized_cd_min)) 
-                        + (wt_eff * normalized_efficiency_max) 
-                        + (wt_window * normalized_window_score))    
-            
             else:
-                print("Invalid modality specified. Must be 'single' or 'multi'")
-    
-    except Exception as e:
-        print(f"Failed for iteration {current_count}, due to {e}")
-        score = 1e6
+                raise ValueError(f"Unknown parametrization mode: {airfoil_parametrization_mode}")
 
-    # Write out L/D and params to CSV for logging and plotting
-    try:
-        with open(log_file_path, 'a', newline='') as f:
-            writer = csv.writer(f)
+            foil.xfoil_analysis(mode=mode, Re=250000, alpha_sequence=[0, 20, 0.5])
+
+            cl = foil.cl
+            cd = foil.cd
             
-            param_str = "placeholder"
-            if airfoil_parametrization_mode == "NACA" and naca_params is not None:
-                param_str = list(naca_params)
-            elif airfoil_parametrization_mode == "PARSEC" and params is not None:
-                param_str = params.to_str_labelled()
+            # Scoring logic
+            # If empty data, penalize objective 1 nad 2
+            if np.size(cl) == 0 or np.size(cd) == 0:
+                f1 = 1e6
+                f2 = 1e6
+                
+            else:
+                # Objective 1: Max Cl
+                # Normalize
+                f1 = -1 * (np.max(cl) / self.baseline_data['Cl'])
+                
+                # Obj2 : Window
+                threshold = 0.90 * np.max(cl)
+                
+                valid_indices = np.where(cl >= threshold)[0]
+                
+                if len(valid_indices) == 0:
+                    window_score = 0 
+                else:
+                    diffs = np.diff(valid_indices)
+                    split_indices = np.where(diffs > 1)[0] + 1
+                    groups = np.split(valid_indices, split_indices)
+                    window_score = max(len(g) for g in groups) / self.baseline_data['Window']
+                    
+                f2 = -1 * window_score
             
-            writer.writerow([current_count, score, param_str])
-    
-    except Exception as e:
-        print(f"Logger failed to write in iteration {current_count} due to: {e}")
+            foil.cleanup()
         
-    # Save dat and polar files every 50th iteration to ./final_otuput, ignore failed iterations
-    # if (current_count % 50 == 0) and (score < 1e5):
-    #     if airfoil_obj.dat_file.exists():
-    #         if modality == "multi" or singleVar_opt in ["L/D", "Cl"]:
-    #              score_ForStr = -score # We maximized, so fun is negative
-            
-    #         save_name = f"{final_otuput_dir}/iter_{current_count}_score_{score_ForStr:.2f}"
-
-    #         if airfoil_obj.dat_file.exists():
-    #             save_dat_name = Path(f"{save_name}.dat")
-    #             shutil.copy(airfoil_obj.dat_file, save_dat_name)
-            
-    #         if airfoil_obj.polar_file.exists():
-    #             save_polar_name = Path(f"{save_name}_polar.txt")
-    #             shutil.copy(airfoil_obj.polar_file, save_polar_name)
-    
-    # Cleanup temp files in ./temp
-    airfoil_obj.cleanup()
-    
-    return score
-
-def save_airfoil_data(parameters: np.ndarray, base_filename: str):
-    """
-    Saves .dat and polar files for a given set of parameters.
-    Uses pid=999 for a unique, non-worker process.
-    """
-    airfoil_obj = None
-    try:
-        if airfoil_parametrization_mode == "NACA":
-            naca_params = np.round(parameters).astype(int)
-            airfoil_name = f"{base_filename}_NACA{naca_params[0]}{naca_params[1]}{naca_params[2]}"
-            airfoil_obj = Airfoil(airfoil_name, nacaCode=naca_params, pid=999)
-            
-        elif airfoil_parametrization_mode == "PARSEC":
-            airfoil_name = f"{base_filename}_PARSEC"
-            params = parsecParams.from_array(parameters)
-            airfoil_obj = Airfoil(airfoil_name, params=params, pid=999)
+        except Exception as error:
+            #print(f"Evaluation error: {error}")
+            f1 = 1e6
+            f2 = 1e6
+            if 'foil' in locals(): foil.cleanup()
         
-        else:
-            print(f"Invalid mode {airfoil_parametrization_mode}, cannot save.")
-            return
+        # Return objectives
+        # pymoo wants out["F"] to be list/array of objectives
+        out["F"] = [f1, f2]
+        
+# ******************************************************************
 
-        # Get object and data
-        airfoil_obj.xfoil_analysis(mode=airfoil_parametrization_mode, Re=250000, alpha_sequence=[0, 20, 0.5])
-
-        # Define save paths
-        save_dat_path = Path(f"{final_otuput_dir}/{base_filename}.dat")
-        save_polar_path = Path(f"{final_otuput_dir}/{base_filename}_polar.txt")
-
-        # Save .dat file
-        if airfoil_parametrization_mode == "PARSEC":
-            if airfoil_obj.dat_file.exists():
-                shutil.copy(airfoil_obj.dat_file, save_dat_path)
-                print(f"Saved: {save_dat_path}")
-
-        elif airfoil_parametrization_mode == "NACA":
-            airfoil_obj.dat_file = save_dat_path
-            airfoil_obj.write_dat_file()
-
-        # Save polar file
-        if airfoil_obj.polar_file.exists():
-            shutil.copy(airfoil_obj.polar_file, save_polar_path)
-            print(f"Saved: {save_polar_path}")
-        else:
-            print(f"Polar file not generated for {base_filename}")
-
-    except Exception as e:
-        print(f"Failed to save {base_filename} due to: {e}")
-
-
-
+# ******************** MAIN ********************
 if __name__ == "__main__":    
     xvfb_display = ":88"
-    print(f"🖥️  Starting background Xvfb server on {xvfb_display}...")
+    print(f" Starting background xvfb server on {xvfb_display}")
     
     xvfb_process = subprocess.Popen(
         ["Xvfb", xvfb_display, "-screen", "0", "1024x768x24"],
@@ -246,94 +144,89 @@ if __name__ == "__main__":
     # Set the environment variable for THIS process.
     # All worker processes spawned by differential_evolution will INHERIT this!
     os.environ["DISPLAY"] = xvfb_display
+    
+    n_threads = 6
+    pool = ThreadPool(n_threads)
+    runner = StarmapParallelization(pool.starmap)
+    
     try:
         if airfoil_parametrization_mode == "PARSEC":
             param_centralDefs = {
-                'r_le':     {'default': 0.015,  'bounds': (0.0012, 0.018)},
-                'X_up':     {'default': 0.3025, 'bounds': (0.242, 0.363)},
-                'Z_up':     {'default': 0.07,   'bounds': (0.048, 0.072)},
-                'Z_XXup':   {'default': -0.5,   'bounds': (-0.6, -0.4)},
+                'r_le':      0.015,  
+                'X_up':      0.3025, 
+                'Z_up':      0.07,   
+                'Z_XXup':    -0.5,   
                 
-                'X_lo':     {'default': 0.3025, 'bounds': (0.242, 0.363)},
-                'Z_lo':     {'default': -0.07,  'bounds': (-0.072, -0.048)},
-                'Z_XXlo':   {'default': 0.5,    'bounds': (0.4, 0.6)},
+                'X_lo':      0.3025, 
+                'Z_lo':      -0.07,  
+                'Z_XXlo':    0.5,    
                 
-                'Z_te':     {'default': 0.0,    'bounds': (-0.004, 0.004)},
-                'delta_Z_te':{'default': 0.0,   'bounds': (0, 0.012)},
-                'alpha_te': {'default': 0.0,    'bounds': (0, 11.1)},
-                'beta_te':  {'default': 0.0,    'bounds': (-3.335, 0)}
+                'Z_te':      0.0,    
+                'delta_Z_te': 0.0,   
+                'alpha_te':  0.0,     
+                'beta_te':   0.0,    
             }
-
-            params_keys = param_centralDefs.keys()
-
-            # Assemble input, x0, and bounds from central definition
-            input = {}
-            x0 = []
-            bounds = []
-
-            for key in params_keys:
-                input[key] = param_centralDefs[key]['default']
-                x0.append(param_centralDefs[key]['default'])
-                bounds.append(param_centralDefs[key]['bounds'])
-
-        elif airfoil_parametrization_mode == "NACA":
-            x0 = [0, 0 ,12]
-            bounds=[(0, 5), (0, 6), (12, 24)]
-        
-        
-        save_airfoil_data(np.array(x0), "initial_foil")
-        
-        # Run the optimization loop
-        result = differential_evolution(objective_function, 
-                                    bounds=bounds,
-                                    x0 = x0,
-                                    maxiter=50, popsize=10, disp=True, 
-                                    workers=1)
-        
-
-        save_airfoil_data(result.x, "Final_foil")
-
-        print("\n" + "=" * 40)
-        print("Optimization Complete")
-        print("=" * 40)
-        
-        if result.success:
-            print(f"Converged: ({result.message})")
-        else:
-            print(f"Not converged: ({result.message})")
-        print("-" * 40)
-        
-        if modality == "multi":
-            print(f"Best Score (Weighted): {-result.fun:.4f}") 
-        elif modality == "single":
-            print(f"Best Score: {-result.fun:.4f}")
             
-        print(f"Best Parameters: {result.x}")
-        print("-" * 40)
+            bounds_margin = 0.2 
+            xl = np.array([])
+            xu = np.array([])
+            
+            for key, values in param_centralDefs.items():
+                if values == 0.0:
+                    low = values 
+                    high = values
+               
+                else:
+                    low = values * (1 - bounds_margin)
+                    high = values * (1 + bounds_margin)
+                
+                xl = np.append(xl, min(low, high))
+                xu = np.append(xu, max(low,high))
+            
+            sampling=FloatRandomSampling()
+            crossover=SBX(prob=0.9, eta=2)
+            mutation=PM(prob=0.09, eta=5)
+            
+            
+        elif airfoil_parametrization_mode == "NACA":
+            # Define NACA bounds
+            # Digits => (max camber, dist of max camber from LE in tenths of chord, max thickness)
+            xl = np.array([0, 0, 12])
+            xu = np.array([5, 6, 24])
+            sampling=IntegerRandomSampling()
+            crossover=SBX(prob=0.9, eta=2, repair=RoundingRepair())
+            mutation=PM(prob=0.33, eta=5, repair=RoundingRepair())
+
+        # Run the optimization
+        print("Starting optimization")
+
+        problem = airfoilOptProblem(xl=xl, xu=xu, baseline_data={'Cl': 1.2, 'Window': 4.0}, 
+                                        elementwise_runner=runner)
+        algorithm = NSGA2(
+            pop_size=40,
+            n_offspring=40,
+            sampling=sampling,
+            crossover=crossover,
+            mutation=mutation,
+            eliminate_duplicates=True
+        )
         
-        print(f"Total number of iterations: {result.nit}")
-        print(f"Total number of function evaluations i.e XFOIL Runs: {result.nfev}")
-        print("="*40)
+        res = minimize(
+            problem,
+            algorithm,
+            ('n_gen', 5),
+            seed=1,
+            verbose=True)
+
+        print("Optimization done")
+        
+        # Save results
+        with open("optimization_results.pkl", "wb") as f:
+            pickle.dump(res, f)
+            print("Results saved to pickle file")
+        
     finally:
-        # --- CLEANUP ---
-        print("🛑 Killing Xvfb server...")
+        print(" Killing xvfb server")
         xvfb_process.terminate()
         xvfb_process.wait()
-
-
-"""
-Note on nfev and nit
-
-nit = number of iterations
-nfev = number of function evaluations
-
-For genetic algorithms,
-nfev = nit * popsize * number_of_parameters
-
-Therefore, diff evo is probably not a good idea for this use case. Also, looking at the
-optimzer benchmarks from Andrea, DE is probably the worst one to use. Should look into 
-other options.
-PARSEC is also probably a bad option to use for parametrization because of the number of params used. 
-Since XFOIL is fast, I guess its not the worst option, but still, finding a better parametrization option
-with fewer params would be better.
-"""
+        
