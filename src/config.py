@@ -14,6 +14,9 @@ from pymoo.operators.repair.rounding import RoundingRepair
 # Set log path
 LOG_FILE_PATH = Path("data/optimization_datalog.csv")
 
+# Number of threads for parallel evaluation
+N_THREADS = 6
+
 # Parametrization mode: "NACA" or "PARSEC"
 AIRFOIL_PARAMETRIZATION_MODE = "NACA"
 

@@ -52,28 +52,48 @@ class parsecParams:
 class Airfoil:
     def __init__(self, name: str, pid: int,
                  params: parsecParams | None = None, nacaCode: Optional[np.ndarray] = None):
+        """
+        Airfoil container.
+
+        Args:
+            name: descriptive name for the foil (used in temp filenames)
+            pid: integer used to create unique temp filenames
+            params: `parsecParams` instance for PARSEC parametrization
+            nacaCode: numpy array or list for NACA digits (kept for backward compatibility)
+        """
         self.name = name
         self.params = params
         self.pid = pid
+        # keep backwards-compatible attribute name
         self.nacaCode = nacaCode if nacaCode is not None else []
-        
+
         self.dat_file = Path(f"data/temp/{name}_pid{pid}.dat")
         self.polar_file = Path(f"data/temp/{name}_pid{pid}Polar.txt")
 
-        # If PARSEC params is used, gen x and y coords
-        if params is not None:
+        # Validate input types
+        if self.params is not None and isinstance(self.params, (list, tuple, np.ndarray)):
+            raise TypeError(
+                "'params' must be a parsecParams instance. "
+            )
+
+        # If PARSEC params is used, generate x and y coords
+        if self.params is not None:
             self.x, self.y = self._gen_coords()
-            
+
         # If NACA used, x and y handled by XFOIL, so set here to None
-        elif nacaCode is not None:
+        elif self.nacaCode is not None and len(self.nacaCode) != 0:
             self.x = None
             self.y = None
-                
-        # Set default aero data to empty lists
-        self.cl = []
-        self.cd = []
-        self.aoa = []
-        self.efficiency = []
+        else:
+            # Neither NACA nor PARSEC params provided
+            self.x = None
+            self.y = None
+
+        # Set default aero data to empty arrays
+        self.cl = np.array([])
+        self.cd = np.array([])
+        self.aoa = np.array([])
+        self.efficiency = np.array([])
         
     def _gen_coords(self):
             """
@@ -171,8 +191,8 @@ class Airfoil:
 
             return x_conc_airfoil, y_conc_airfoil
     
-    def write_dat_file(self, out_path=None,
-                       nacaCode: Optional[np.ndarray] = None):
+    def write_dat_file(self, out_path=None, *, nacaCode: Optional[np.ndarray] = None, 
+                       naca_code: Optional[np.ndarray] = None):
         """
         Writes PARSEC airfoil coordinates into .dat file for XFOIL use
         For NACA airfoils, XFOIL handles .dat gen
@@ -185,29 +205,30 @@ class Airfoil:
         
         if self.params is not None:
             header = self.params.to_str()
-        #elif self.nacaCode is not None and len(self.nacaCode) == 3:
-            #header = f"{self.nacaCode[0]}{self.nacaCode[1]}{self.nacaCode[2]}"
         else:
             header = ""
         
         output_path = out_path if out_path is not None else self.dat_file
-        
-        if nacaCode is None:
+
+        # Accept either naca Code from the method itself, or from the airfoil attribute
+        naca_input = naca_code if naca_code is not None else nacaCode
+
+        if naca_input is None:
+            # Write PARSEC coords (if available)
             with open(output_path, 'w+') as f:
                 f.write(f"{self.name} {header}\n")
-                
+
                 if self.x is not None and self.y is not None:
                     for xi, yi in zip(self.x, self.y):
                         f.write(f"{xi:12.6f}  {yi:12.6f}\n")
-                    #print(f"{self.name} written to {out_path}")
-                    
                 else:
+                    # Nothing to write
                     return
-        
-        elif nacaCode is not None:
-            naca_str = f"{nacaCode[0]}{nacaCode[1]}{nacaCode[2]}"
+        else:
+            # NACA: let XFOIL generate and save the .dat file
+            naca_str = f"{naca_input[0]}{naca_input[1]}{naca_input[2]}"
             dat_name = f"NACA{naca_str}.dat"
-            output_path = out_path if out_path is not None else Path("postProcess_data") / dat_name 
+            output_path = out_path if out_path is not None else Path("postProcess_data") / dat_name
 
             xfoil_commands = (
                 "NACA\n"
@@ -222,9 +243,7 @@ class Airfoil:
                 check=True
             )
         
-        
-        
-    def xfoil_analysis(self, mode: str, Re: int = 250000, alpha_sequence: list = [0, 15, 1]):
+    def xfoil_analysis(self, mode: str, Re: int = 250000, alpha_sequence: Optional[list] = None):
             """
         Runs xfoil with a txt file input. Programmaticaly generates the txt input
         
@@ -236,8 +255,9 @@ class Airfoil:
             # Path for the xfoil commands txt file
             individual_log_path = Path(f"xfoil_log_{self.pid}.txt")
             
-            
-            
+            # Initialize alpha sequence if not provided
+            if alpha_sequence is None:
+                alpha_sequence = [0, 15, 1]
             
             if mode == "NACA":
                 if len(self.nacaCode) == 3:
@@ -291,7 +311,7 @@ class Airfoil:
             
         
             # Run xfoil and process results        
-            try:                
+            try:
                 with open(individual_log_path, "w") as log_file:
                     process = subprocess.Popen(
                         ["xfoil"],
@@ -300,6 +320,7 @@ class Airfoil:
                         stderr=subprocess.STDOUT,
                         text=True
                     )
+                    # communicate will send input and wait; enforce timeout afterward
                     process.communicate(input=xfoil_commands)
                     process.wait(timeout=30)
             

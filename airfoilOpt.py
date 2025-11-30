@@ -20,6 +20,7 @@ from pymoo.parallelization.starmap import StarmapParallelization
 # Import configuration and problem class from src
 from src.config import (
     AIRFOIL_PARAMETRIZATION_MODE,
+    N_THREADS,
     POP_SIZE,
     N_OFFSPRING,
     N_GEN,
@@ -55,8 +56,8 @@ def run_optimization():
     # Set the environment variable for this process.
     os.environ["DISPLAY"] = XVFB_DISPLAY
     
-    n_threads = 6
-    pool = ThreadPool(n_threads)
+    # Setup threads for parallel evaluation
+    pool = ThreadPool(N_THREADS)
     runner = StarmapParallelization(pool.starmap)
     
     try:

@@ -69,7 +69,7 @@ Next Steps -
     - As it stands, xfoil "hijacks" the terminal and prevents the execution of any other scripts
 - [x] Script to plot airfoils and aero polars
 - [x] Update plotter to support naca mode
-- [] Reorganize and cleaup code for clarity and readability
+- [x] Reorganize and cleaup code for clarity and readability
 - [] Change parsec bounds to be manually set
 - [] A better way to select which foil to plot from Pareto Front
     - A slider? or something else thats interactive?
