@@ -1,6 +1,6 @@
 # My testing files
 test.py
-rewrite.py
+rewrite*.py
 *.dat
 randomFiles/
 
@@ -8,9 +8,13 @@ randomFiles/
 .venv/
 __pycache__/
 *.pyc
+.vscode/
+.github/
 
 # Files from the script
 *.bl
-xfoilCommands*.txt
-./data/airfoils/*.dat
-./data/airfoils/*.txt
+xfoil*.txt
+/data/temp/*.dat
+data/temp/*.txt
+data/final_output/*.dat
+data/final_output/*.txt

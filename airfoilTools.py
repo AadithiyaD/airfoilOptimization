@@ -1,9 +1,10 @@
-import subprocess
 import os
-from pathlib import Path
 import numpy as np
-from dataclasses import dataclass
+import subprocess
+import warnings
+from pathlib import Path
 from typing import Optional
+from dataclasses import dataclass
 
 @dataclass
 class parsecParams:
@@ -56,8 +57,8 @@ class Airfoil:
         self.pid = pid
         self.nacaCode = nacaCode if nacaCode is not None else []
         
-        self.dat_file = Path(f"data/airfoils/{name}{pid}.dat")
-        self.polar_file = Path(f"data/output/{name}{pid}Polar.txt")
+        self.dat_file = Path(f"data/temp/{name}_pid{pid}.dat")
+        self.polar_file = Path(f"data/temp/{name}_pid{pid}Polar.txt")
 
         # If PARSEC params is used, gen x and y coords
         if params is not None:
@@ -170,16 +171,13 @@ class Airfoil:
 
             return x_conc_airfoil, y_conc_airfoil
     
-    def write_dat_file(self):
+    def write_dat_file(self, out_path=None,
+                       nacaCode: Optional[np.ndarray] = None):
         """
-        Writes airfoil coordinates into .dat file for XFOIL use
+        Writes PARSEC airfoil coordinates into .dat file for XFOIL use
+        For NACA airfoils, XFOIL handles .dat gen
         Args:
-            x => x - coordinates
-            y => y - coordinates
-            airfoil_header => Name of airfoil in the header of the .dat file
             out_path => Path to save output
-            coeffs => Add coefficients of airfoil parametrization to the header of the .dat file. If not specified,
-                set to empty string
         """
         # Write out points
         # First line is header; airfoil name and coeffs if specified
@@ -187,21 +185,43 @@ class Airfoil:
         
         if self.params is not None:
             header = self.params.to_str()
-        elif self.nacaCode is not None and len(self.nacaCode) == 3:
-            header = f"{self.nacaCode[0]}{self.nacaCode[1]}{self.nacaCode[2]}"
+        #elif self.nacaCode is not None and len(self.nacaCode) == 3:
+            #header = f"{self.nacaCode[0]}{self.nacaCode[1]}{self.nacaCode[2]}"
         else:
             header = ""
         
-        with open(self.dat_file, 'w+') as f:
-            f.write(f"{self.name} {header}\n")
-            
-            if self.x is not None and self.y is not None:
-                for xi, yi in zip(self.x, self.y):
-                    f.write(f"{xi:12.6f}  {yi:12.6f}\n")
-                print(f"{self.name} written to {self.dat_file}")
+        output_path = out_path if out_path is not None else self.dat_file
+        
+        if nacaCode is None:
+            with open(output_path, 'w+') as f:
+                f.write(f"{self.name} {header}\n")
                 
-            else:
-                return
+                if self.x is not None and self.y is not None:
+                    for xi, yi in zip(self.x, self.y):
+                        f.write(f"{xi:12.6f}  {yi:12.6f}\n")
+                    #print(f"{self.name} written to {out_path}")
+                    
+                else:
+                    return
+        
+        elif nacaCode is not None:
+            naca_str = f"{nacaCode[0]}{nacaCode[1]}{nacaCode[2]}"
+            dat_name = f"NACA{naca_str}.dat"
+            output_path = out_path if out_path is not None else Path("postProcess_data") / dat_name 
+
+            xfoil_commands = (
+                "NACA\n"
+                f"{naca_str}\n"
+                f"SAVE {output_path}\n"
+                "QUIT\n"
+            )
+
+            subprocess.run(
+                ["xfoil"],
+                input=xfoil_commands.encode('utf-8'),
+                check=True
+            )
+        
         
         
     def xfoil_analysis(self, mode: str, Re: int = 250000, alpha_sequence: list = [0, 15, 1]):
@@ -213,8 +233,12 @@ class Airfoil:
             Re => Reynolds number, default = 250000
             alpha_sequence => [start, end, increment] AoA for analysis, default = [0, 15, 1]
             """
-            # Initial inputs
-            # Alpha sequence is [start, end, increment]
+            # Path for the xfoil commands txt file
+            individual_log_path = Path(f"xfoil_log_{self.pid}.txt")
+            
+            
+            
+            
             if mode == "NACA":
                 if len(self.nacaCode) == 3:
                     naca_code = f"{self.nacaCode[0]}{self.nacaCode[1]}{self.nacaCode[2]}"
@@ -227,18 +251,18 @@ class Airfoil:
                     os.remove(self.polar_file)
                     
                 # Create commands
-                with open(f"xfoilCommands{self.pid}.txt", "w") as commands:
-                    commands.write("NACA\n")
-                    commands.write(f"{naca_code}\n")
-                    commands.write("OPER\n")
-                    commands.write(f"VISC {Re}\n")
-                    #commands.write("SEQP\n")
-                    commands.write("PACC\n")
-                    commands.write(f"{self.polar_file}\n")
-                    commands.write("\n")
-                    commands.write(f"ASEQ {alpha_sequence[0]} {alpha_sequence[1]} {alpha_sequence[2]}\n")
-                    commands.write("PACC\n\n")
-                    commands.write("QUIT\n")
+                xfoil_commands = (
+                    "NACA\n"
+                    f"{naca_code}\n"
+                    "OPER\n"
+                    f"VISC {Re}\n"
+                    "PACC\n"
+                    f"{self.polar_file}\n"
+                    "\n"
+                    f"ASEQ {alpha_sequence[0]} {alpha_sequence[1]} {alpha_sequence[2]}\n"
+                    "PACC\n\n"
+                    "QUIT\n"
+                    )
         
     
             elif mode == "PARSEC":
@@ -248,26 +272,48 @@ class Airfoil:
                     os.remove(self.polar_file)
                     
                 # Create commands
-                with open(f"xfoilCommands{self.pid}.txt", "w") as commands:
-                    commands.write("LOAD\n")
-                    commands.write(f"{self.dat_file}\n")
-                    commands.write("OPER\n")
-                    commands.write(f"VISC {Re}\n")
-                    #commands.write("SEQP\n")
-                    commands.write("PACC\n")
-                    commands.write(f"{self.polar_file}\n")
-                    commands.write("\n")
-                    commands.write(f"ASEQ {alpha_sequence[0]} {alpha_sequence[1]} {alpha_sequence[2]}\n")
-                    commands.write("PACC\n\n")
-                    commands.write("QUIT\n")
+                xfoil_commands = (
+                    "LOAD\n"
+                    f"{self.dat_file}\n"
+                    "OPER\n"
+                    f"VISC {Re}\n"
+                    "PACC\n"
+                    f"{self.polar_file}\n"
+                    "\n"
+                    f"ASEQ {alpha_sequence[0]} {alpha_sequence[1]} {alpha_sequence[2]}\n"
+                    "PACC\n\n"
+                    "QUIT\n"
+                )
         
             else:
                 print("Mode must be set to NACA or PARSEC")
                 return
             
-            # Run xfoil and process results
-            subprocess.call(f"xfoil < xfoilCommands{self.pid}.txt", shell=True)            
+        
+            # Run xfoil and process results        
+            try:                
+                with open(individual_log_path, "w") as log_file:
+                    process = subprocess.Popen(
+                        ["xfoil"],
+                        stdin=subprocess.PIPE,
+                        stdout=log_file,
+                        stderr=subprocess.STDOUT,
+                        text=True
+                    )
+                    process.communicate(input=xfoil_commands)
+                    process.wait(timeout=30)
             
+            except subprocess.TimeoutExpired:
+                print(f"XFOIL timed out for {self.name}")
+                process.kill() # kill the runaway process
+            
+            except FileNotFoundError:
+                 print(f"XFOIL executable not found. Make sure it's in system's PATH.")
+            
+            except Exception as e:
+                # Catch other potential errors, like from check=True
+                print(f"XFOIL failed for {self.name}: {e}")  
+                
             self._process_results()
 
     def _process_results(self):
@@ -275,7 +321,10 @@ class Airfoil:
             Sets AoA, Cl, Cd, L/D data. If polar data file does not exist, return empty list
         """
         if Path(self.polar_file).exists():
-            data = np.genfromtxt(self.polar_file, skip_header=12)
+            # Ignore the empty file warning message
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                data = np.genfromtxt(self.polar_file, skip_header=12)
             
             if data.size == 0 or len(data.shape) == 1:
                return
