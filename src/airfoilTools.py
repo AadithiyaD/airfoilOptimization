@@ -84,10 +84,6 @@ class Airfoil:
         elif self.nacaCode is not None and len(self.nacaCode) != 0:
             self.x = None
             self.y = None
-        else:
-            # Neither NACA nor PARSEC params provided
-            self.x = None
-            self.y = None
 
         # Set default aero data to empty arrays
         self.cl = np.array([])

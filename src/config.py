@@ -65,10 +65,10 @@ if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
         'Z_lo': -0.07,
         'Z_XXlo': 0.5,
         
-        'Z_te': 0.0,
-        'delta_Z_te': 0.0,
-        'alpha_te': 0.0,
-        'beta_te': 0.0,
+        'Z_te': 0,
+        'delta_Z_te': 0,
+        'alpha_te': 0,
+        'beta_te': 0,
     }
 
     BOUNDS_MARGIN = 0.2
@@ -76,9 +76,21 @@ if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
     XU = np.array([])
 
     for key, value in PARAM_CENTRAL_DEFS.items():
-        if value == 0.0:
-            low = value
-            high = value
+        # Set the last 4 params manually. They can easily create invalid foils if not bounded properly.
+        # Set Z_te and delta_Z_te to 0 for sharp trailing edge
+        # If you want to manually adjust a specfic param, do it here with an elif block.
+        if key == 'Z_te' or key == 'delta_Z_te':
+            low = 0
+            high = 0
+            
+        elif key == 'alpha_te':
+            low = 0
+            high = 0
+            
+        elif key == 'beta_te':
+            low = 0
+            high = 0
+            
         else:
             low = value * (1 - BOUNDS_MARGIN)
             high = value * (1 + BOUNDS_MARGIN)

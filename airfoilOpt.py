@@ -51,6 +51,7 @@ def run_optimization():
         stderr=subprocess.DEVNULL
     )
     
+    # Sleep to allow Xvfb to start
     time.sleep(1)
     
     # Set the environment variable for this process.
@@ -61,7 +62,7 @@ def run_optimization():
     runner = StarmapParallelization(pool.starmap)
     
     try:
-        # Create the optimization problem
+        # Create and run the opt problem
         print("Creating optimization problem")
         problem = airfoilOptProblem(
             xl=XL,
@@ -70,7 +71,6 @@ def run_optimization():
             elementwise_runner=runner
         )
         
-        # Create the NSGA2 algorithm
         algorithm = NSGA2(
             pop_size=POP_SIZE,
             n_offspring=N_OFFSPRING,
@@ -80,7 +80,6 @@ def run_optimization():
             eliminate_duplicates=ELIMINATE_DUPLICATES
         )
         
-        # Run the optimization
         print("Starting optimization")
         res = minimize(
             problem,
