@@ -10,15 +10,11 @@ from pymoo.operators.sampling.rnd import FloatRandomSampling, IntegerRandomSampl
 from pymoo.operators.repair.rounding import RoundingRepair
 
 #* ======================== Common Configuration ========================
-
-# Set log path
-LOG_FILE_PATH = Path("data/optimization_datalog.csv")
-
 # Number of threads for parallel evaluation
-N_THREADS = 6
+N_THREADS = 10
 
 # Parametrization mode: "NACA" or "PARSEC"
-AIRFOIL_PARAMETRIZATION_MODE = "NACA"
+AIRFOIL_PARAMETRIZATION_MODE = "PARSEC"
 
 # Multi-objective targets (case-sensitive)
 MOO_OBJECTIVES = ["window", "Cl"]
@@ -30,7 +26,7 @@ ALPHA_SEQ = [0, 20, 0.5]  # [start, end, step]
 # NSGA2 algorithm parameters
 POP_SIZE = 40
 N_OFFSPRING = 40
-N_GEN = 5
+N_GEN = 500
 ELIMINATE_DUPLICATES = True
 
 # Xvfb display for headless XFOIL

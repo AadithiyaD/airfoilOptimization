@@ -2,9 +2,9 @@
 
 This was a repo for me to test out and learn optimization methods and just 
 generally improve my Python scripting. My goal was to get an airfoil
-optimizer setup for XFOIL, optimizing for max L/D. From there, it has now grown into a somewhat usable
-single element airfoil design tool, where you can perform multi objective optimisation for Cl, Cd,
-Cl/Cd and operational window.
+optimizer setup for XFOIL, optimizing for max L/D. From there, it has now grown into a usable
+single element airfoil optimizer tool, where you can perform bi objective optimisation for Cl and 
+operational window.
 
 Tested and developed on WSL2.
 

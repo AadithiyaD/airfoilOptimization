@@ -248,8 +248,6 @@ class Airfoil:
             Re => Reynolds number, default = 250000
             alpha_sequence => [start, end, increment] AoA for analysis, default = [0, 15, 1]
             """
-            # Path for the xfoil commands txt file
-            individual_log_path = Path(f"xfoil_log_{self.pid}.txt")
             
             # Initialize alpha sequence if not provided
             if alpha_sequence is None:
@@ -308,17 +306,17 @@ class Airfoil:
         
             # Run xfoil and process results        
             try:
-                with open(individual_log_path, "w") as log_file:
-                    process = subprocess.Popen(
-                        ["xfoil"],
-                        stdin=subprocess.PIPE,
-                        stdout=log_file,
-                        stderr=subprocess.STDOUT,
-                        text=True
-                    )
-                    # communicate will send input and wait; enforce timeout afterward
-                    process.communicate(input=xfoil_commands)
-                    process.wait(timeout=30)
+
+                process = subprocess.Popen(
+                    ["xfoil"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    text=True
+                )
+                # communicate will send input and wait; enforce timeout afterward
+                process.communicate(input=xfoil_commands)
+                process.wait(timeout=30)
             
             except subprocess.TimeoutExpired:
                 print(f"XFOIL timed out for {self.name}")
@@ -362,9 +360,6 @@ class Airfoil:
         try:
             self.dat_file.unlink(missing_ok=True)
             self.polar_file.unlink(missing_ok=True)
-            
-            commands_file = Path(f"xfoilCommands{self.pid}.txt")
-            commands_file.unlink(missing_ok=True)
         
         except OSError as error:
             print(f"Encountered error when cleaning up {self.name}: {error}")

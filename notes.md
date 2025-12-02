@@ -27,6 +27,7 @@ Next Steps
 - [x] Reorganize and cleaup code for clarity and readability
 - [x] Change parsec bounds to be manually set
 - [] Baseline data for Cd and L/D
+- [] Allow Cd and L/D to be used for bi objective optimisation
 - [] Check how other optimization algorithms perform
 - [] A better way to select which foil to plot from Pareto Front
     - A slider? or something else thats interactive?
