@@ -1,0 +1,31 @@
+upper = parsecParams(
+    r_le=0.11,
+    X_up=0.45,
+    Z_up=0.18,
+    Z_XXup=-0.92,
+    
+    X_lo=0.65,
+    Z_lo=0.09,
+    Z_XXlo=-1.03,
+    
+    Z_te=0.0,
+    delta_Z_te=0,
+    alpha_te=-25,
+    beta_te=2.01,
+)
+
+lower = PARSEC_PARAMS = parsecParams(
+    r_le=0.025,
+    X_up=0.40,
+    Z_up=0.16,
+    Z_XXup=-0.92,
+    
+    X_lo=0.6,
+    Z_lo=0.11,
+    Z_XXlo=-1.1,
+    
+    Z_te=0,
+    delta_Z_te=0,
+    alpha_te=-30,
+    beta_te=10,
+)

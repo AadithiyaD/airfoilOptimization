@@ -50,49 +50,28 @@ else:
 
 # Design space bounds based on parametrization mode
 if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
-    # PARSEC parameter central definitions
-    PARAM_CENTRAL_DEFS = {
-        'r_le': 0.015,
-        'X_up': 0.3025,
-        'Z_up': 0.07,
-        'Z_XXup': -0.5,
+    # PARSEC parameter bounds (lower and upper for each parameter)
+    PARSEC_BOUNDS = {
+        'r_le': (0.02, 0.038),
+        'X_up': (0.14, 0.20),
+        'Z_up': (0.10, 0.15),
+        'Z_XXup': (-1.0, 0.0),
         
-        'X_lo': 0.3025,
-        'Z_lo': -0.07,
-        'Z_XXlo': 0.5,
+        'X_lo': (0.14, 0.20),
+        'Z_lo': (-0.15, -0.10),
+        'Z_XXlo': (0.0, 1.0),
         
-        'Z_te': 0,
-        'delta_Z_te': 0,
-        'alpha_te': 0,
-        'beta_te': 0,
+        'Z_te': (-0.03, -0.01),           
+        'delta_Z_te': (0.0, 0.0),     # Sharp TE (fixed)
+        'alpha_te': (0.0, 0.0),       # No direction change at TE (fixed)
+        'beta_te': (0.0, 0.0),        # No wedge at TE (fixed)
     }
 
-    BOUNDS_MARGIN = 0.2
-    XL = np.array([])
-    XU = np.array([])
-
-    for key, value in PARAM_CENTRAL_DEFS.items():
-        # Set the last 4 params manually. They can easily create invalid foils if not bounded properly.
-        # Set Z_te and delta_Z_te to 0 for sharp trailing edge
-        # If you want to manually adjust a specfic param, do it here with an elif block.
-        if key == 'Z_te' or key == 'delta_Z_te':
-            low = 0
-            high = 0
-            
-        elif key == 'alpha_te':
-            low = 0
-            high = 0
-            
-        elif key == 'beta_te':
-            low = 0
-            high = 0
-            
-        else:
-            low = value * (1 - BOUNDS_MARGIN)
-            high = value * (1 + BOUNDS_MARGIN)
-
-        XL = np.append(XL, min(low, high))
-        XU = np.append(XU, max(low, high))
+    # Extract bounds in order
+    param_order = ['r_le', 'X_up', 'Z_up', 'Z_XXup', 'X_lo', 
+                   'Z_lo', 'Z_XXlo', 'Z_te', 'delta_Z_te', 'alpha_te', 'beta_te']
+    XL = np.array([PARSEC_BOUNDS[p][0] for p in param_order])
+    XU = np.array([PARSEC_BOUNDS[p][1] for p in param_order])
 
 elif AIRFOIL_PARAMETRIZATION_MODE == "NACA":
     # NACA 4-digit bounds
