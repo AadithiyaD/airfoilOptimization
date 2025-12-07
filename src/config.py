@@ -10,6 +10,7 @@ from pymoo.operators.sampling.rnd import FloatRandomSampling, IntegerRandomSampl
 from pymoo.operators.repair.rounding import RoundingRepair
 
 #* ======================== Common Configuration ========================
+
 # Number of threads for parallel evaluation
 N_THREADS = 10
 
@@ -21,7 +22,15 @@ MOO_OBJECTIVES = ["window", "Cl"]
 
 # XFOIL analysis parameters
 RE = 250000  
-ALPHA_SEQ = [0, 20, 0.5]  # [start, end, step] 
+ALPHA_SEQ = [0, 20, 1]  # [start, end, step] 
+
+# Xvfb display for headless XFOIL
+XVFB_DISPLAY = ":88"
+
+#* ====================== Optimization Configuration =====================
+
+# Optimization algorithm, NSGA2 or CMOPSO
+OPT_ALGO = "NSGA2"
 
 # NSGA2 algorithm parameters
 POP_SIZE = 40
@@ -29,8 +38,7 @@ N_OFFSPRING = 40
 N_GEN = 500
 ELIMINATE_DUPLICATES = True
 
-# Xvfb display for headless XFOIL
-XVFB_DISPLAY = ":88"
+# CMOPSO algorithm parameters
 
 #* ================ Parametrization specific Configuration ============
 
@@ -52,19 +60,19 @@ else:
 if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
     # PARSEC parameter bounds (lower and upper for each parameter)
     PARSEC_BOUNDS = {
-        'r_le': (0.02, 0.038),
-        'X_up': (0.14, 0.20),
-        'Z_up': (0.10, 0.15),
-        'Z_XXup': (-1.0, 0.0),
+        'r_le': (0.025, 0.11),
+        'X_up': (0.4, 0.45),
+        'Z_up': (0.16, 0.18),
+        'Z_XXup': (-0.92, -0.92),
         
-        'X_lo': (0.14, 0.20),
-        'Z_lo': (-0.15, -0.10),
-        'Z_XXlo': (0.0, 1.0),
+        'X_lo': (0.6, 0.65),
+        'Z_lo': (0.09, 0.11),
+        'Z_XXlo': (-1.1, -1.03),
         
-        'Z_te': (-0.03, -0.01),           
+        'Z_te': (0, 0),           
         'delta_Z_te': (0.0, 0.0),     # Sharp TE (fixed)
-        'alpha_te': (0.0, 0.0),       # No direction change at TE (fixed)
-        'beta_te': (0.0, 0.0),        # No wedge at TE (fixed)
+        'alpha_te': (-30, -25),       # No direction change at TE (fixed)
+        'beta_te': (2, 10),        # No wedge at TE (fixed)
     }
 
     # Extract bounds in order

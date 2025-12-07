@@ -15,11 +15,13 @@ import pickle
 from multiprocessing.pool import ThreadPool
 from pymoo.optimize import minimize
 from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.algorithms.moo.cmopso import CMOPSO
 from pymoo.parallelization.starmap import StarmapParallelization
 
 # Import configuration and problem class from src
 from src.config import (
     AIRFOIL_PARAMETRIZATION_MODE,
+    OPT_ALGO,
     N_THREADS,
     POP_SIZE,
     N_OFFSPRING,
@@ -34,6 +36,7 @@ from src.config import (
     MUTATION,
 )
 from src.problem import airfoilOptProblem
+from src.pymooCustomDefs import convergenceCheck
 
 
 def run_optimization():
@@ -60,6 +63,7 @@ def run_optimization():
     # Setup threads for parallel evaluation
     pool = ThreadPool(N_THREADS)
     runner = StarmapParallelization(pool.starmap)
+    callback = convergenceCheck()
     
     try:
         # Create and run the opt problem
@@ -71,14 +75,29 @@ def run_optimization():
             elementwise_runner=runner
         )
         
-        algorithm = NSGA2(
+        if OPT_ALGO == "NSGA2":
+            algorithm = NSGA2(
             pop_size=POP_SIZE,
             n_offspring=N_OFFSPRING,
             sampling=SAMPLING,
             crossover=CROSSOVER,
             mutation=MUTATION,
             eliminate_duplicates=ELIMINATE_DUPLICATES
-        )
+            )        
+
+        elif OPT_ALGO == "CMOPSO":
+            algorithm = CMOPSO(
+            pop_size=100,
+            max_velocity_rate=0.2,
+            elite_size=10,
+            mutation_rate=0.5,
+            seed=1
+            )
+        
+        else:
+            raise ValueError(f"Unknown optimization algorithm: {OPT_ALGO}")
+        
+
         
         print("Starting optimization")
         res = minimize(
@@ -86,7 +105,9 @@ def run_optimization():
             algorithm,
             ('n_gen', N_GEN),
             seed=1,
-            verbose=True
+            verbose=True,
+            save_history=True,
+            callback=callback
         )
         
         print("Optimization done")

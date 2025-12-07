@@ -42,7 +42,7 @@ class airfoilOptProblem(ElementwiseProblem):
             elementwise_evaluation=True,
             **kwargs
         )
-        self.baseline_data = baseline_data if baseline_data else {'Cl': 1.2, 'Window': 4.0}
+        self.baseline_data = baseline_data if baseline_data else {'Cl': 1.2, 'Window': 1.0}
 
     def _evaluate(self, x, out, *args, **kwargs):
         """
@@ -111,6 +111,10 @@ class airfoilOptProblem(ElementwiseProblem):
             # Penalize evaluation errors
             f1 = 1e6
             f2 = 1e6
+            
+            print(f"Exception enountered {error}")
+            print(f"Penalty assigned")
+            
             if 'foil' in locals():
                 foil.cleanup()
 

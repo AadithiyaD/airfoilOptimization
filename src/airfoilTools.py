@@ -315,12 +315,13 @@ class Airfoil:
                     text=True
                 )
                 # communicate will send input and wait; enforce timeout afterward
-                process.communicate(input=xfoil_commands)
-                process.wait(timeout=30)
+                process.communicate(input=xfoil_commands, timeout=2)
+                # process.wait(timeout=4)
             
             except subprocess.TimeoutExpired:
                 print(f"XFOIL timed out for {self.name}")
                 process.kill() # kill the runaway process
+                process.wait()
             
             except FileNotFoundError:
                  print(f"XFOIL executable not found. Make sure it's in system's PATH.")

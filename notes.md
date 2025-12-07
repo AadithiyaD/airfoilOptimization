@@ -26,9 +26,10 @@ Next Steps
 - [x] Update plotter to support naca mode
 - [x] Reorganize and cleaup code for clarity and readability
 - [x] Change parsec bounds to be manually set
-- [] Baseline data for Cd and L/D
-- [] Allow Cd and L/D to be used for bi objective optimisation
+- [] BIG QUESTION - Does this need to be a moo problem? Can I just optimize for window,
+    and put my Cl req as a criteria i.e Can I just do a single objective opt?
 - [] Check how other optimization algorithms perform
+- [] Maybe redo the window calculation?
 - [] A better way to select which foil to plot from Pareto Front
     - A slider? or something else thats interactive?
 - [] Multi element airfoil optimization
@@ -63,3 +64,8 @@ Theoretically, the multi objective mode with window should address this. You're 
 at several AoAs so this should provide usable foils, provided the design space bounds are appropriate
 
 V3 finished and pushed on 30-11-25
+
+07-12-25
+--------
+By giving bounds around the MSHD airfoil, the algorithm is able to somewhat recreate the airfoil
+and give me an output that has similar characteristics. I think
