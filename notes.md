@@ -26,10 +26,14 @@ Next Steps
 - [x] Update plotter to support naca mode
 - [x] Reorganize and cleaup code for clarity and readability
 - [x] Change parsec bounds to be manually set
+- [x] Redo the window calculation?
+    - Window can go upto 5, but Cl can at best go to around 2
+    - Values are now normalized wrt a pre-defined max, rather than baselien
+    - Window now counts total degrees of stable op, rather than num of points
 - [] BIG QUESTION - Does this need to be a moo problem? Can I just optimize for window,
     and put my Cl req as a criteria i.e Can I just do a single objective opt?
 - [] Check how other optimization algorithms perform
-- [] Maybe redo the window calculation?
+    - [x] CMOPSO implemeted
 - [] A better way to select which foil to plot from Pareto Front
     - A slider? or something else thats interactive?
 - [] Multi element airfoil optimization
@@ -68,4 +72,14 @@ V3 finished and pushed on 30-11-25
 07-12-25
 --------
 By giving bounds around the MSHD airfoil, the algorithm is able to somewhat recreate the airfoil
-and give me an output that has similar characteristics. I think
+and give me an output that has similar characteristics. I think.
+
+CMOPSO needs a larger timeout value, around 10s
+
+The current issue im dealing with is why my pareto front has only 3 or 4 solutions even after 800 gens of nsga2,
+and the algo seems to converge. I think this is probably due to the hyperparameters needed some tuning, and
+almost definitely due to the window score being greater than the Cl score. ANS - Pop size was too small. 
+Recommended to set Pop_size >= 10 * numberOfParams_inDesignSpace i.e here, Pop_size >= 110
+
+NACA mode was meant to be an initial testing ground. All of the main features are implemented for PARSEC
+parametrisation

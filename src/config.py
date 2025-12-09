@@ -6,6 +6,8 @@ import numpy as np
 from pathlib import Path
 from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PM
+from src.airfoilTools import parsecParams
+# from pymoo.termination import get_termination
 from pymoo.operators.sampling.rnd import FloatRandomSampling, IntegerRandomSampling
 from pymoo.operators.repair.rounding import RoundingRepair
 
@@ -31,14 +33,42 @@ XVFB_DISPLAY = ":88"
 
 # Optimization algorithm, NSGA2 or CMOPSO
 OPT_ALGO = "NSGA2"
+N_GEN = 10
+
+# If choosing seeded sampling, specify baseline
+BASE_PARSECPARAMS = parsecParams(
+    r_le=0.015,
+    X_up=0.3025,
+    Z_up=0.07,
+    Z_XXup=-0.5,
+    
+    X_lo=0.3025,
+    Z_lo=-0.07,
+    Z_XXlo=0.5,
+    
+    Z_te=0.0,
+    delta_Z_te=0.0,
+    alpha_te=0.0,
+    beta_te=0.0,
+)
+
+# Number of points to seed, excluding baseline input. Remainder of pop size will be
+# randomly sampled
+POINTS_TO_SEED = 9 
+
+# Termination criterion: time-based (30 mins)
+# TERMINATION = get_termination("time", "00:30:00")
 
 # NSGA2 algorithm parameters
-POP_SIZE = 40
+POP_SIZE = 110
 N_OFFSPRING = 40
-N_GEN = 500
 ELIMINATE_DUPLICATES = True
 
 # CMOPSO algorithm parameters
+CMOPSO_POP_SIZE = 100
+CMOPSO_MAX_VELOCITY_RATE = 0.2
+CMOPSO_ELITE_SIZE = 10
+CMOPSO_MUTATION_RATE = 0.5
 
 #* ================ Parametrization specific Configuration ============
 
@@ -71,8 +101,8 @@ if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
         
         'Z_te': (0, 0),           
         'delta_Z_te': (0.0, 0.0),     # Sharp TE (fixed)
-        'alpha_te': (-30, -25),       # No direction change at TE (fixed)
-        'beta_te': (2, 10),        # No wedge at TE (fixed)
+        'alpha_te': (-30, -25),       
+        'beta_te': (2, 10),        
     }
 
     # Extract bounds in order
@@ -87,5 +117,6 @@ elif AIRFOIL_PARAMETRIZATION_MODE == "NACA":
     XL = np.array([0, 0, 12])
     XU = np.array([5, 6, 24])
 
-# Baseline data for normalization in multi-objective scoring
-BASELINE_DATA = {'Cl': 1.2, 'Window': 4.0}
+# Theoretical max data for normalization in multi-objective scoring
+# Yes, it is confusing to call this 'baseline' data
+BASELINE_DATA = {'Cl': 2.5, 'Window': 5.0}

@@ -289,6 +289,7 @@ class Airfoil:
                 xfoil_commands = (
                     "LOAD\n"
                     f"{self.dat_file}\n"
+                    "PANEL\n"
                     "OPER\n"
                     f"VISC {Re}\n"
                     "PACC\n"
@@ -315,8 +316,7 @@ class Airfoil:
                     text=True
                 )
                 # communicate will send input and wait; enforce timeout afterward
-                process.communicate(input=xfoil_commands, timeout=2)
-                # process.wait(timeout=4)
+                process.communicate(input=xfoil_commands, timeout=10)
             
             except subprocess.TimeoutExpired:
                 print(f"XFOIL timed out for {self.name}")

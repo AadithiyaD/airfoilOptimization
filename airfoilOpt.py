@@ -17,26 +17,13 @@ from pymoo.optimize import minimize
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.algorithms.moo.cmopso import CMOPSO
 from pymoo.parallelization.starmap import StarmapParallelization
+from pymoo.core.evaluator import Evaluator
+from pymoo.core.population import Population
 
 # Import configuration and problem class from src
-from src.config import (
-    AIRFOIL_PARAMETRIZATION_MODE,
-    OPT_ALGO,
-    N_THREADS,
-    POP_SIZE,
-    N_OFFSPRING,
-    N_GEN,
-    ELIMINATE_DUPLICATES,
-    XVFB_DISPLAY,
-    XL,
-    XU,
-    BASELINE_DATA,
-    SAMPLING,
-    CROSSOVER,
-    MUTATION,
-)
+from src.config import *
 from src.problem import airfoilOptProblem
-from src.pymooCustomDefs import convergenceCheck
+from src.customDefs import store_ndsData, seededSampleGen
 
 
 def run_optimization():
@@ -63,7 +50,8 @@ def run_optimization():
     # Setup threads for parallel evaluation
     pool = ThreadPool(N_THREADS)
     runner = StarmapParallelization(pool.starmap)
-    callback = convergenceCheck()
+    
+    
     
     try:
         # Create and run the opt problem
@@ -75,11 +63,16 @@ def run_optimization():
             elementwise_runner=runner
         )
         
+        # Generate seeded sampling
+        seeded_sample = seededSampleGen()
+        pop = Population.new("X", seeded_sample)
+        Evaluator().eval(problem, pop)
+        
         if OPT_ALGO == "NSGA2":
             algorithm = NSGA2(
             pop_size=POP_SIZE,
             n_offspring=N_OFFSPRING,
-            sampling=SAMPLING,
+            sampling=seeded_sample,
             crossover=CROSSOVER,
             mutation=MUTATION,
             eliminate_duplicates=ELIMINATE_DUPLICATES
@@ -87,10 +80,10 @@ def run_optimization():
 
         elif OPT_ALGO == "CMOPSO":
             algorithm = CMOPSO(
-            pop_size=100,
-            max_velocity_rate=0.2,
-            elite_size=10,
-            mutation_rate=0.5,
+            pop_size=CMOPSO_POP_SIZE,
+            max_velocity_rate=CMOPSO_MAX_VELOCITY_RATE,
+            elite_size=CMOPSO_ELITE_SIZE,
+            mutation_rate=CMOPSO_MUTATION_RATE,
             seed=1
             )
         
@@ -106,8 +99,9 @@ def run_optimization():
             ('n_gen', N_GEN),
             seed=1,
             verbose=True,
-            save_history=True,
-            callback=callback
+            callback=store_ndsData(),
+            save_history=True
+            
         )
         
         print("Optimization done")

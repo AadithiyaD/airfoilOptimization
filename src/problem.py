@@ -30,7 +30,7 @@ class airfoilOptProblem(ElementwiseProblem):
         Args:
             xl: Lower bounds for design variables (np.ndarray)
             xu: Upper bounds for design variables (np.ndarray)
-            baseline_data: Dict with baseline 'Cl' and 'Window' values for normalization
+            baseline_data: Dict with theoretical max 'Cl' and 'Window' values for normalization
             **kwargs: Additional arguments passed to ElementwiseProblem
         """
         super().__init__(
@@ -42,7 +42,7 @@ class airfoilOptProblem(ElementwiseProblem):
             elementwise_evaluation=True,
             **kwargs
         )
-        self.baseline_data = baseline_data if baseline_data else {'Cl': 1.2, 'Window': 1.0}
+        self.baseline_data = baseline_data if baseline_data else {'Cl': 2.5, 'Window': 5.0}
 
     def _evaluate(self, x, out, *args, **kwargs):
         """
@@ -80,6 +80,7 @@ class airfoilOptProblem(ElementwiseProblem):
 
             cl = foil.cl
             cd = foil.cd
+            aoa = foil.aoa
 
             # Scoring logic
             if np.size(cl) == 0 or np.size(cd) == 0:
@@ -96,13 +97,19 @@ class airfoilOptProblem(ElementwiseProblem):
 
                 if len(valid_indices) == 0:
                     window_score = 0
+                
                 else:
                     # Find continuous ranges above threshold
                     diffs = np.diff(valid_indices)
                     split_indices = np.where(diffs > 1)[0] + 1
                     groups = np.split(valid_indices, split_indices)
-                    window_score = max(len(g) for g in groups) / self.baseline_data['Window']
-
+                    
+                    window_degrees = max(
+                        aoa[group[-1]] - aoa[group[0]] for group in groups
+                    )
+                    
+                    window_score = window_degrees / self.baseline_data['Window']
+                    
                 f2 = -1 * window_score
 
             foil.cleanup()
