@@ -126,7 +126,7 @@ def run_optimization():
         
         # Save results
         with open("optimization_results.pkl", "wb") as f:
-            # pickle.dump(res, f)
+            pickle.dump(res, f)
             print("Results saved to optimization_results.pkl")
         
         return res
