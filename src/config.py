@@ -52,10 +52,6 @@ BASE_PARSECPARAMS = parsecParams(
     beta_te=0.0,
 )
 
-# Number of points to seed, excluding baseline input. Remainder of pop size will be
-# randomly sampled
-POINTS_TO_SEED = 9 
-
 # Termination criterion: time-based (30 mins)
 # TERMINATION = get_termination("time", "00:30:00")
 
@@ -74,9 +70,17 @@ CMOPSO_MUTATION_RATE = 0.5
 
 # Initialize sampling, crossover, and mutation operators based on parametrization mode
 if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
-    SAMPLING = FloatRandomSampling()
+    USE_SEEDED_SAMPLING = True
     CROSSOVER = SBX(prob=0.9, eta=2)
     MUTATION = PM(prob=0.09, eta=5)
+    
+    if USE_SEEDED_SAMPLING:
+        # Number of points to seed, excluding baseline input. Remainder of pop size will be
+        # randomly sampled
+        POINTS_TO_SEED = 9 
+    else:
+        SAMPLING = FloatRandomSampling()
+
 
 elif AIRFOIL_PARAMETRIZATION_MODE == "NACA":
     SAMPLING = IntegerRandomSampling()

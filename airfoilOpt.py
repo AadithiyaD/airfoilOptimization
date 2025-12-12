@@ -62,21 +62,39 @@ def run_optimization():
             baseline_data=BASELINE_DATA,
             elementwise_runner=runner
         )
-        
-        # Generate seeded sampling
-        seeded_sample = seededSampleGen()
-        pop = Population.new("X", seeded_sample)
-        Evaluator().eval(problem, pop)
-        
+
+        if USE_SEEDED_SAMPLING:
+            # Generate seeded sampling
+            seeded_sample = seededSampleGen(base_params=BASE_PARSECPARAMS,
+                                            points_to_seed=POINTS_TO_SEED,
+                                            perturbation=0.05,
+                                            n_samples=POP_SIZE,
+                                        seed=1,
+                                        n_var=problem.n_var)
+            pop = Population.new("X", seeded_sample)
+            Evaluator().eval(problem, pop)
+                   
         if OPT_ALGO == "NSGA2":
-            algorithm = NSGA2(
-            pop_size=POP_SIZE,
-            n_offspring=N_OFFSPRING,
-            sampling=seeded_sample,
-            crossover=CROSSOVER,
-            mutation=MUTATION,
-            eliminate_duplicates=ELIMINATE_DUPLICATES
-            )        
+            
+            if USE_SEEDED_SAMPLING:
+                # Use pre-generated seeded sample as initial population
+                algorithm = NSGA2(
+                    pop_size=POP_SIZE,
+                    n_offspring=N_OFFSPRING,
+                    sampling=seeded_sample,
+                    crossover=CROSSOVER,
+                    mutation=MUTATION,
+                    eliminate_duplicates=ELIMINATE_DUPLICATES
+                )
+            else:                
+                algorithm = NSGA2(
+                pop_size=POP_SIZE,
+                n_offspring=N_OFFSPRING,
+                sampling=SAMPLING,
+                crossover=CROSSOVER,
+                mutation=MUTATION,
+                eliminate_duplicates=ELIMINATE_DUPLICATES
+                )        
 
         elif OPT_ALGO == "CMOPSO":
             algorithm = CMOPSO(
@@ -108,7 +126,7 @@ def run_optimization():
         
         # Save results
         with open("optimization_results.pkl", "wb") as f:
-            pickle.dump(res, f)
+            # pickle.dump(res, f)
             print("Results saved to optimization_results.pkl")
         
         return res
