@@ -32,12 +32,10 @@ Next Steps
     - Window now counts total degrees of stable op, rather than num of points
 - [] BIG QUESTION - Does this need to be a moo problem? Can I just optimize for window,
     and put my Cl req as a criteria i.e Can I just do a single objective opt?
+    - This is possible. This is called scalarization
+    - Implement this?
 - [] Check how other optimization algorithms perform
     - [x] CMOPSO implemeted
-- [] A better way to select which foil to plot from Pareto Front
-    - A slider? or something else thats interactive?
-- [] Multi element airfoil optimization
-    - Probably best to use JavaFoil for this
 
 
 Notes
@@ -47,6 +45,11 @@ Notes
     Does not have a clean implementation for this. You can specify your bounds around the airfoil you have in mind
     and then compare the results in post processing
 - The slowdown is NOT due to Xvfb. Its just because of my ASEQ range 0 20 0.5
+- With `verbose=True`, you will see $\epsilon$ in the console. This is the value compared against the threshold
+    for determination of termination. 
+    $\epsilon = max(delta_{ideal}, delta_{nadir}, delta_{f})$. 
+    Whenever the $\epsilon$ value changes, the indicator column shows which variable has caused this change. `f` 
+    indicates a new optimum has been found, and its delta with the previous optimum is greater than the threshold.
 
 8-11-25
 -------
@@ -83,3 +86,11 @@ Recommended to set Pop_size >= 10 * numberOfParams_inDesignSpace i.e here, Pop_s
 
 NACA mode was meant to be an initial testing ground. All of the main features are implemented for PARSEC
 parametrisation
+
+13-12-25
+--------
+MOPSO is not a good fit for this opt problem. PSO depends on the previous design point for deciding where to
+go next. Unlike evollutionary algos, it cannot bring in random mutation to try and escape local optima, or 
+failing designs. If an XFOIL eval fails for a point, it is unlikely that its associated particle in the swarm
+will be able to improve much. So, you should really stick to algos like NSGA2, or other GAs
+

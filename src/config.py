@@ -7,7 +7,7 @@ from pathlib import Path
 from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PM
 from src.airfoilTools import parsecParams
-# from pymoo.termination import get_termination
+from pymoo.termination.default import DefaultMultiObjectiveTermination
 from pymoo.operators.sampling.rnd import FloatRandomSampling, IntegerRandomSampling
 from pymoo.operators.repair.rounding import RoundingRepair
 
@@ -21,6 +21,10 @@ AIRFOIL_PARAMETRIZATION_MODE = "PARSEC"
 
 # Multi-objective targets (case-sensitive)
 MOO_OBJECTIVES = ["window", "Cl"]
+
+# Theoretical max data used for normalization in multi-objective scoring
+# Yes, it is confusing to call this 'baseline' data
+BASELINE_DATA = {'Cl': 2.5, 'Window': 5.0}
 
 # XFOIL analysis parameters
 RE = 250000  
@@ -36,6 +40,7 @@ OPT_ALGO = "NSGA2"
 N_GEN = 10
 
 # If choosing seeded sampling, specify baseline
+USE_SEEDED_SAMPLING = True
 BASE_PARSECPARAMS = parsecParams(
     r_le=0.015,
     X_up=0.3025,
@@ -52,8 +57,15 @@ BASE_PARSECPARAMS = parsecParams(
     beta_te=0.0,
 )
 
-# Termination criterion: time-based (30 mins)
-# TERMINATION = get_termination("time", "00:30:00")
+# Termination criterion
+TERMINATION = DefaultMultiObjectiveTermination(
+    xtol=1e-8,
+    cvtol=1e-6,
+    ftol=0.01,
+    period=30,
+    n_max_gen=1000,
+    n_max_evals=100000
+)
 
 # NSGA2 algorithm parameters
 POP_SIZE = 110
@@ -70,7 +82,6 @@ CMOPSO_MUTATION_RATE = 0.5
 
 # Initialize sampling, crossover, and mutation operators based on parametrization mode
 if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
-    USE_SEEDED_SAMPLING = True
     CROSSOVER = SBX(prob=0.9, eta=2)
     MUTATION = PM(prob=0.09, eta=5)
     
@@ -90,7 +101,7 @@ elif AIRFOIL_PARAMETRIZATION_MODE == "NACA":
 else:
     raise ValueError(f"Unknown parametrization mode: {AIRFOIL_PARAMETRIZATION_MODE}")
 
-# Design space bounds based on parametrization mode
+# Design space bounds
 if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
     # PARSEC parameter bounds (lower and upper for each parameter)
     PARSEC_BOUNDS = {
@@ -109,7 +120,7 @@ if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
         'beta_te': (2, 10),        
     }
 
-    # Extract bounds in order
+    # Construct bounds arrays
     param_order = ['r_le', 'X_up', 'Z_up', 'Z_XXup', 'X_lo', 
                    'Z_lo', 'Z_XXlo', 'Z_te', 'delta_Z_te', 'alpha_te', 'beta_te']
     XL = np.array([PARSEC_BOUNDS[p][0] for p in param_order])
@@ -121,6 +132,4 @@ elif AIRFOIL_PARAMETRIZATION_MODE == "NACA":
     XL = np.array([0, 0, 12])
     XU = np.array([5, 6, 24])
 
-# Theoretical max data for normalization in multi-objective scoring
-# Yes, it is confusing to call this 'baseline' data
-BASELINE_DATA = {'Cl': 2.5, 'Window': 5.0}
+

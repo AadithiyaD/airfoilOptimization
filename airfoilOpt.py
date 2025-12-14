@@ -114,6 +114,7 @@ def run_optimization():
         res = minimize(
             problem,
             algorithm,
+            TERMINATION,
             ('n_gen', N_GEN),
             seed=1,
             verbose=True,

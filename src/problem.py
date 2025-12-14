@@ -115,7 +115,7 @@ class airfoilOptProblem(ElementwiseProblem):
             foil.cleanup()
 
         except Exception as error:
-            # Penalize evaluation errors
+            # Penalize XFOIL crashes and eval errors
             f1 = 1e6
             f2 = 1e6
             

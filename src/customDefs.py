@@ -80,4 +80,4 @@ def seededSampleGen(base_params=BASE_PARSECPARAMS, points_to_seed=POINTS_TO_SEED
     all_points = np.vstack([seeded_points, random_points])
     return all_points
 
-    
+#! Implement a termination criterion based on number of generations without improvement in best objective value.
