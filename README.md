@@ -20,5 +20,5 @@ Requires XFOIL, xvfb and Xlaunch. Can be installed through
 ```sudo apt-get update```
 ```sudo apt-get install xvfb```
 ```sudo apt install xfoil```
-and Xlaunch can be installed through [Xming](https://sourceforge.net/projects/xming/) for Windows
+and Xlaunch can be installed through [Xming](https://sourceforge.net/projects/xming/)
 

@@ -64,13 +64,13 @@ def run_optimization():
         )
 
         if USE_SEEDED_SAMPLING:
-            # Generate seeded sampling
+            # Generate seeded sample
             seeded_sample = seededSampleGen(base_params=BASE_PARSECPARAMS,
                                             points_to_seed=POINTS_TO_SEED,
                                             perturbation=0.05,
                                             n_samples=POP_SIZE,
-                                        seed=1,
-                                        n_var=problem.n_var)
+                                            seed=1,
+                                            n_var=problem.n_var)
             pop = Population.new("X", seeded_sample)
             Evaluator().eval(problem, pop)
                    
@@ -120,7 +120,6 @@ def run_optimization():
             verbose=True,
             callback=store_ndsData(),
             save_history=True
-            
         )
         
         print("Optimization done")

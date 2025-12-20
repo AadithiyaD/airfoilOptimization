@@ -30,12 +30,16 @@ Next Steps
     - Window can go upto 5, but Cl can at best go to around 2
     - Values are now normalized wrt a pre-defined max, rather than baselien
     - Window now counts total degrees of stable op, rather than num of points
-- [] BIG QUESTION - Does this need to be a moo problem? Can I just optimize for window,
+- [x] BIG QUESTION - Does this need to be a moo problem? Can I just optimize for window,
     and put my Cl req as a criteria i.e Can I just do a single objective opt?
     - This is possible. This is called scalarization
     - Implement this?
+        - No
 - [] Check how other optimization algorithms perform
     - [x] CMOPSO implemeted
+- [] Implement constraints
+    - On geometry to check validity ex: thickness constraint
+    - On aero param for performance specification
 
 
 Notes

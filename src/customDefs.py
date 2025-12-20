@@ -1,7 +1,7 @@
 from pymoo.core.callback import Callback
 import numpy as np
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
-from src.config import BASE_PARSECPARAMS, POINTS_TO_SEED, XL, XU, POP_SIZE
+from src.config import XL, XU
 
 class RestartCallback(Callback):
     """
@@ -37,8 +37,8 @@ class store_ndsData(Callback):
         # fronts[0] contains the indices of the nds solns
         self.data["n_nds"].append(len(fronts[0]))
     
-def seededSampleGen(base_params=BASE_PARSECPARAMS, points_to_seed=POINTS_TO_SEED,
-                 perturbation=0.05, n_samples=POP_SIZE, seed=1, n_var=11):
+def seededSampleGen(base_params, points_to_seed: int, n_samples:int,
+                 perturbation=0.05, seed:int=1, n_var:int=11):
     """
     Function to generate gen 0 sample using a baseline input
     Note - Could this be a custom sample class? Probably, but for now this works.
@@ -48,7 +48,7 @@ def seededSampleGen(base_params=BASE_PARSECPARAMS, points_to_seed=POINTS_TO_SEED
         points_to_seed: Number of perturbed samples to generate around baseline
         perturbation: Max percentage perturbation (+-) to apply to each parameter
         n_samples: Total number of samples to generate (including baseline and perturbed)
-        seed: Random seed for reproducibility
+        seed: Set seed for reproducibility in the rng gen used in random selection
         n_var: Number of design variables (parameters)
     """
     
@@ -79,5 +79,3 @@ def seededSampleGen(base_params=BASE_PARSECPARAMS, points_to_seed=POINTS_TO_SEED
     
     all_points = np.vstack([seeded_points, random_points])
     return all_points
-
-#! Implement a termination criterion based on number of generations without improvement in best objective value.

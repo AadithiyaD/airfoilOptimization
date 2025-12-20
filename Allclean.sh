@@ -1,6 +1,7 @@
 # Script to clean up workspace after an optimization run
 rm ./data/temp/*.txt
-rm ./data/temp/*.dat
+rm ./data/temp/*test*.dat
+rm ./data/temp/*MOO*.dat
 rm ./data/final_output/*.dat
 rm ./data/final_output/*.txt
 rm ./postProcess_data/*.dat
