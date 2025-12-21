@@ -110,43 +110,43 @@ class Airfoil:
             
                 "Z_te"          => TE offset in vertical sense
                 "delta_Z_te"    => TE thickness
-                "alpha_te"      => TE direction
-                "beta_te"       => TE wedge angle
+                "alpha_te"      => TE direction in degrees
+                "beta_te"       => TE wedge angle in degrees
         """
             A_upper = np.array([
-            [1,                       1,                      1,                      1,                      1,                      1                                                         ],
+            [1,                       1,                      1,                      1,                      1,                      1                                                                                                ],
             [self.params.X_up**(1/2),             self.params.X_up**(3/2),            self.params.X_up**(5/2),            self.params.X_up**(7/2),            self.params.X_up**(9/2),            self.params.X_up**(11/2)             ],
-            [1/2,                     3/2,                    5/2,                    7/2,                    9/2,                    11/2                                                                 ],
+            [1/2,                     3/2,                    5/2,                    7/2,                    9/2,                    11/2                                                                                             ],
             [(1/2) * self.params.X_up**(-1/2),    (3/2) * self.params.X_up**(1/2),    (5/2) * self.params.X_up**(3/2),    (7/2) * self.params.X_up**(5/2),    (9/2) * self.params.X_up**(7/2),    (11/2) * self.params.X_up**(9/2)     ],
             [(-1/4) * self.params.X_up**(-3/2),   (3/4) * self.params.X_up**(-1/2),   (15/4) * self.params.X_up**(1/2),   (35/4) * self.params.X_up**(3/2),   (63/4) * self.params.X_up**(5/2),   (99/4) * self.params.X_up**(7/2)     ],
-            [1,                       0,                      0,                      0,                      0,                      0                                                                    ]
+            [1,                       0,                      0,                      0,                      0,                      0                                                                                                ]
             ])   
 
             B_upper = np.array([
             [self.params.Z_te + self.params.delta_Z_te/2                            ],
-            [self.params.Z_up                                           ],
+            [self.params.Z_up                                                       ],
             [np.tan(np.radians(self.params.alpha_te - (self.params.beta_te/2)))     ], # np.tan expects angle in raidans
-            [0                                              ],
-            [self.params.Z_XXup                                         ],
-            [np.sqrt(2 * self.params.r_le)                              ]
+            [0                                                                      ],
+            [self.params.Z_XXup                                                     ],
+            [np.sqrt(2 * self.params.r_le)                                          ]
             ])
 
             A_lower = np.array([
-            [1,                       1,                      1,                      1,                      1,                      1                        ],
+            [1,                       1,                      1,                      1,                      1,                      1                                                                                                ],
             [self.params.X_lo**(1/2),             self.params.X_lo**(3/2),            self.params.X_lo**(5/2),            self.params.X_lo**(7/2),            self.params.X_lo**(9/2),            self.params.X_lo**(11/2)             ],
-            [1/2,                     3/2,                    5/2,                    7/2,                    9/2,                    11/2                     ],
+            [1/2,                     3/2,                    5/2,                    7/2,                    9/2,                    11/2                                                                                             ],
             [(1/2) * self.params.X_lo**(-1/2),    (3/2) * self.params.X_lo**(1/2),    (5/2) * self.params.X_lo**(3/2),    (7/2) * self.params.X_lo**(5/2),    (9/2) * self.params.X_lo**(7/2),    (11/2) * self.params.X_lo**(9/2)     ],
             [(-1/4) * self.params.X_lo**(-3/2),   (3/4) * self.params.X_lo**(-1/2),   (15/4) * self.params.X_lo**(1/2),   (35/4) * self.params.X_lo**(3/2),   (63/4) * self.params.X_lo**(5/2),   (99/4) * self.params.X_lo**(7/2)     ],
-            [1,                       0,                      0,                      0,                      0,                      0                        ]
+            [1,                       0,                      0,                      0,                      0,                      0                                                                                                ]
             ])   
             
             B_lower = np.array([
             [self.params.Z_te - self.params.delta_Z_te/2                            ],
-            [self.params.Z_lo                                           ],
+            [self.params.Z_lo                                                       ],
             [np.tan(np.radians(self.params.alpha_te + (self.params.beta_te/2)))     ], 
-            [0                                              ],
-            [self.params.Z_XXlo                                         ],
-            [-np.sqrt(2 * self.params.r_le)                              ]
+            [0                                                                      ],
+            [self.params.Z_XXlo                                                     ],
+            [-np.sqrt(2 * self.params.r_le)                                         ]
             ])
             
             X_upper = np.linalg.solve(A_upper, B_upper)
