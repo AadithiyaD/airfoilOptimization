@@ -51,8 +51,6 @@ def run_optimization():
     pool = ThreadPool(N_THREADS)
     runner = StarmapParallelization(pool.starmap)
     
-    
-    
     try:
         # Create and run the opt problem
         print("Creating optimization problem")

@@ -35,7 +35,7 @@ Next Steps
     - This is possible. This is called scalarization
     - Implement this?
         - No
-- [] Check how other optimization algorithms perform
+- [x] Check how other optimization algorithms perform
     - [x] CMOPSO implemeted
 - [x] Implement constraints
     - On geometry to check validity ex: thickness constraint
@@ -109,3 +109,9 @@ optimizer is based on XFOIL, and its apparently able to "solve" the airfoil flow
 but fails when I try to do the same airfoil calc individually.
 
 If this happens, just use xflr5 on windows.
+
+V4 finished on 23-12-25. With this I think I'm done with the major code for the script. My initial goals
+were to get a better understanding of black box optimisation and scripting, and I think i've achieved that.
+I might try and improve one of the airfoils on the pareto front to see if i can make an improvement (This
+is the main use case i envisioned; you'd use the script to get a front of foils better than your input,
+then you modify those to get an even better foil)
