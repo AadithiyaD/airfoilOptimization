@@ -32,6 +32,7 @@ lower = PARSEC_PARAMS = parsecParams(
     beta_te=10,
 )
 
+===========================================
 
 NACA0012 Params (Open TE) ->
 PARSEC_PARAMS = parsecParams(
@@ -49,3 +50,25 @@ PARSEC_PARAMS = parsecParams(
     alpha_te=0,
     beta_te=12.5,
 )
+
+===========================================
+
+Base test
+
+BASE_PARSECPARAMS = parsecParams(
+    r_le=0.015,
+    X_up=0.3025,
+    Z_up=0.07,
+    Z_XXup=-0.5,
+    
+    X_lo=0.3025,
+    Z_lo=-0.07,
+    Z_XXlo=0.5,
+    
+    Z_te=0.0,
+    delta_Z_te=0.0,
+    alpha_te=0.0,
+    beta_te=0.0,
+)
+
+===========================================

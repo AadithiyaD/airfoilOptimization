@@ -10,5 +10,7 @@
     "python.testing.unittestEnabled": false,
     "python.analysis.diagnosticSeverityOverrides": {
         "reportPossiblyUnboundVariable": "none"
-    }
+    },
+    "editor.fontFamily": "Roboto Mono",
+    "editor.fontLigatures": true
 }

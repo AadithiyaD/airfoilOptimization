@@ -14,7 +14,7 @@ from pymoo.operators.repair.rounding import RoundingRepair
 #* ======================== Common Configuration ========================
 
 # Number of threads for parallel evaluation
-N_THREADS = 10
+N_THREADS = 16
 
 # Parametrization mode: "NACA" or "PARSEC"
 AIRFOIL_PARAMETRIZATION_MODE = "PARSEC"
@@ -37,38 +37,42 @@ XVFB_DISPLAY = ":88"
 
 # Optimization algorithm, NSGA2 or CMOPSO
 OPT_ALGO = "NSGA2"
-N_GEN = 10
+N_GEN = 1000
+
+# Cl and window constraints
+CL_CSTR = 2
+WINDOW_CSTR = 5
 
 # If choosing seeded sampling, specify baseline
-USE_SEEDED_SAMPLING = True
+USE_SEEDED_SAMPLING = False
 BASE_PARSECPARAMS = parsecParams(
-    r_le=0.015,
-    X_up=0.3025,
-    Z_up=0.07,
-    Z_XXup=-0.5,
+    r_le=0.5,
+    X_up=0.425,
+    Z_up=0.17,
+    Z_XXup=-0.92,
     
-    X_lo=0.3025,
-    Z_lo=-0.07,
-    Z_XXlo=0.5,
+    X_lo=0.625,
+    Z_lo=0.10,
+    Z_XXlo=-1.05,
     
-    Z_te=0.0,
-    delta_Z_te=0.0,
-    alpha_te=0.0,
-    beta_te=0.0,
+    Z_te=0,
+    delta_Z_te=0,
+    alpha_te=-27.5,
+    beta_te=5,
 )
 
 # Termination criterion
 TERMINATION = DefaultMultiObjectiveTermination(
     xtol=1e-8,
     cvtol=1e-6,
-    ftol=0.01,
-    period=30,
+    ftol=0.001,
+    period=100,
     n_max_gen=1000,
     n_max_evals=100000
 )
 
 # NSGA2 algorithm parameters
-POP_SIZE = 110
+POP_SIZE = 120
 N_OFFSPRING = 40
 ELIMINATE_DUPLICATES = True
 
@@ -115,9 +119,9 @@ if AIRFOIL_PARAMETRIZATION_MODE == "PARSEC":
         'Z_XXlo': (-1.1, -1.03),
         
         'Z_te': (0, 0),           
-        'delta_Z_te': (0.0, 0.0),     # Sharp TE (fixed)
+        'delta_Z_te': (0, 0),     
         'alpha_te': (-30, -25),       
-        'beta_te': (2, 10),        
+        'beta_te': (2.01, 10),        
     }
 
     # Construct bounds arrays

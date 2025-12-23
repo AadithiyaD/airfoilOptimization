@@ -59,24 +59,24 @@ def run_optimization():
         problem = airfoilOptProblem(
             xl=XL,
             xu=XU,
+            cl_cstr=CL_CSTR,
+            window_cstr=WINDOW_CSTR,
             baseline_data=BASELINE_DATA,
             elementwise_runner=runner
         )
 
-        if USE_SEEDED_SAMPLING:
-            # Generate seeded sample
-            seeded_sample = seededSampleGen(base_params=BASE_PARSECPARAMS,
-                                            points_to_seed=POINTS_TO_SEED,
-                                            perturbation=0.05,
-                                            n_samples=POP_SIZE,
-                                            seed=1,
-                                            n_var=problem.n_var)
-            pop = Population.new("X", seeded_sample)
-            Evaluator().eval(problem, pop)
-                   
+        print("Creating algorithm")                   
         if OPT_ALGO == "NSGA2":
-            
             if USE_SEEDED_SAMPLING:
+                seeded_sample = seededSampleGen(base_params=BASE_PARSECPARAMS,
+                                                points_to_seed=POINTS_TO_SEED,
+                                                perturbation=0.05,
+                                                n_samples=POP_SIZE,
+                                                seed=1,
+                                                n_var=problem.n_var)
+                pop = Population.new("X", seeded_sample)
+                Evaluator().eval(problem, pop)
+                
                 # Use pre-generated seeded sample as initial population
                 algorithm = NSGA2(
                     pop_size=POP_SIZE,
@@ -85,7 +85,7 @@ def run_optimization():
                     crossover=CROSSOVER,
                     mutation=MUTATION,
                     eliminate_duplicates=ELIMINATE_DUPLICATES
-                )
+                    )
             else:                
                 algorithm = NSGA2(
                 pop_size=POP_SIZE,
@@ -94,7 +94,7 @@ def run_optimization():
                 crossover=CROSSOVER,
                 mutation=MUTATION,
                 eliminate_duplicates=ELIMINATE_DUPLICATES
-                )        
+                    )        
 
         elif OPT_ALGO == "CMOPSO":
             algorithm = CMOPSO(

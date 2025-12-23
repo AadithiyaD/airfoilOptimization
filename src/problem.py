@@ -23,7 +23,7 @@ class airfoilOptProblem(ElementwiseProblem):
     Supports both NACA 4-digit and PARSEC parametrization modes.
     """
 
-    def __init__(self, xl, xu, baseline_data=None, **kwargs):
+    def __init__(self, xl, xu, cl_cstr=1.8, window_cstr=2.5, baseline_data=None, **kwargs):
         """
         Initialize the optimization problem.
 
@@ -31,18 +31,22 @@ class airfoilOptProblem(ElementwiseProblem):
             xl: Lower bounds for design variables (np.ndarray)
             xu: Upper bounds for design variables (np.ndarray)
             baseline_data: Dict with theoretical max 'Cl' and 'Window' values for normalization
+            cl_cstr: Minimum Cl constraint
+            window_cstr: Minimum window (in degs) constraint
             **kwargs: Additional arguments passed to ElementwiseProblem
         """
         super().__init__(
             n_var=len(xl),
             n_obj=2,
-            n_ieq_constr=0,
+            n_ieq_constr=2,
             xl=xl,
             xu=xu,
             elementwise_evaluation=True,
             **kwargs
         )
         self.baseline_data = baseline_data if baseline_data else {'Cl': 2.5, 'Window': 5.0}
+        self.cl_cstr = cl_cstr
+        self.window_cstr = window_cstr
 
     def _evaluate(self, x, out, *args, **kwargs):
         """
@@ -87,9 +91,14 @@ class airfoilOptProblem(ElementwiseProblem):
                 # Penalize failed evaluations
                 f1 = 1e6
                 f2 = 1e6
+
+                g1 = 1e6
+                g2 = 1e6
+
             else:
                 # Objective 1: Maximize Cl (return negative for minimization)
                 f1 = -1 * (np.max(cl) / self.baseline_data['Cl'])
+                g1 = self.cl_cstr - np.max(cl)
 
                 # Objective 2: Maximize operational window at 90% Cl_max
                 threshold = 0.90 * np.max(cl)
@@ -111,6 +120,7 @@ class airfoilOptProblem(ElementwiseProblem):
                     window_score = window_degrees / self.baseline_data['Window']
                     
                 f2 = -1 * window_score
+                g2 = self.window_cstr - window_degrees
 
             foil.cleanup()
 
@@ -118,12 +128,16 @@ class airfoilOptProblem(ElementwiseProblem):
             # Penalize XFOIL crashes and eval errors
             f1 = 1e6
             f2 = 1e6
+
+            g1 = 1e6
+            g2 = 1e6
             
-            print(f"Exception enountered {error}")
-            print(f"Penalty assigned")
+            print(f"Exception enountered {error}, penalty assigned")
             
             if 'foil' in locals():
                 foil.cleanup()
 
-        # Return objectives to pymoo
+        # Return objectives and constraints to pymoo
         out["F"] = [f1, f2]
+        out["G"] = [g1, g2]
+        
