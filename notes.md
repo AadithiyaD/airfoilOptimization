@@ -114,4 +114,7 @@ V4 finished on 23-12-25. With this I think I'm done with the major code for the 
 were to get a better understanding of black box optimisation and scripting, and I think i've achieved that.
 I might try and improve one of the airfoils on the pareto front to see if i can make an improvement (This
 is the main use case i envisioned; you'd use the script to get a front of foils better than your input,
-then you modify those to get an even better foil)
+then you modify those to get an even better foil). update - No, I'm not going to do the inverse design.
+Inverse airfoil design is complex enough to be its own project, so I won't get into it here.
+
+With this, I'd say the project is done. All I now need to do is make a doc file and a graphic summary
