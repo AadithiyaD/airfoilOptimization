@@ -6,7 +6,7 @@ optimizer setup for XFOIL, optimizing for max L/D. From there, it has now grown 
 single element airfoil optimizer tool, where you can perform bi objective optimisation for Cl and 
 operational window.
 
-Tested and developed on WSL2.
+Tested and developed on Ubuntu 22.04.
 
 Usage
 -----
