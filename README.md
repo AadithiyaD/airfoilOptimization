@@ -8,7 +8,7 @@ operational window.
 
 Tested and developed on Ubuntu 22.04.
 
-![Script Overview](airfoil-opt-summary.svg)
+![Script Overview](airfoil-summary.jpg)
 
 Usage
 -----
