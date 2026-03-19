@@ -12,7 +12,7 @@ Usage
 -----
 Run ```airfoilOpt.py```. Parameters for XFOIL analysis and optimizer can be changed in ```src/config.py```
 
-the ```postProcess_data``` dir has sample pkl files that can be used with ```postProc_Multi.ipynb``` to visualize its results
+The ```postProcess_data``` dir has sample pkl files that can be used with ```postProc_Multi.ipynb``` to visualize its results
 
 Requirements
 ------------
