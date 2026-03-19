@@ -2,6 +2,7 @@
 test.*
 rewrite*.py
 randomFiles/
+test-bounds.txt
 
 # Venv and cache
 .venv/
@@ -17,3 +18,4 @@ xfoil*.txt
 data/temp/*.txt
 data/final_output/*.dat
 data/final_output/*.txt
+*.pkl

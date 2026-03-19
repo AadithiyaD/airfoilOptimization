@@ -1,3 +1,8 @@
+These are just my thoughts i recorded during the development of this project.
+
+----------
+
+
 Next Steps 
 ----------
 - [x] First, I need to create a function for running xfoil and saving the outputs
@@ -35,12 +40,12 @@ Next Steps
     - This is possible. This is called scalarization
     - Implement this?
         - No
-- [] Check how other optimization algorithms perform
+- [x] Check how other optimization algorithms perform
     - [x] CMOPSO implemeted
-- [] Implement constraints
+- Implement constraints
     - On geometry to check validity ex: thickness constraint
     - On aero param for performance specification
-
+    - Future work
 
 Notes
 ------
