@@ -179,13 +179,23 @@ class Airfoil:
             y_upper_TE_LE = y_upperPts[::-1]
             x_lower_LE_TE = x_lowerPts[1:]
             y_lower_LE_TE = y_lowerPts[1:]
-            
-            # Concatenate upper and lower points before outputting to dat file
-            # For lower pts we go from [1:] to avoid a duplicate LE point
-            x_conc_airfoil = np.concatenate([x_upper_TE_LE, x_lower_LE_TE])
-            y_conc_airfoil = np.concatenate([y_upper_TE_LE, y_lower_LE_TE])
 
-            return x_conc_airfoil, y_conc_airfoil
+            # Check if airfoil is valid
+            is_valid = True
+
+            # Check if upper and lower surface cross / intersect
+            # Ignore LE and TE points in check
+            if not np.all(y_upperPts[1:-1] > y_lowerPts[1:-1]):
+                return None, None 
+
+            if is_valid:
+                # Concatenate upper and lower points before outputting to dat file
+                # For lower pts we go from [1:] to avoid a duplicate LE point
+                x_conc_airfoil = np.concatenate([x_upper_TE_LE, x_lower_LE_TE])
+                y_conc_airfoil = np.concatenate([y_upper_TE_LE, y_lower_LE_TE])
+
+                return x_conc_airfoil, y_conc_airfoil
+
     
     def write_dat_file(self, out_path=None, *, nacaCode: Optional[np.ndarray] = None, 
                        naca_code: Optional[np.ndarray] = None):
@@ -284,7 +294,7 @@ class Airfoil:
                 
                 if Path(self.polar_file).exists():
                     os.remove(self.polar_file)
-                    
+                
                 # Create commands
                 xfoil_commands = (
                     "LOAD\n"
@@ -307,7 +317,6 @@ class Airfoil:
         
             # Run xfoil and process results        
             try:
-
                 process = subprocess.Popen(
                     ["xfoil"],
                     stdin=subprocess.PIPE,

@@ -42,18 +42,20 @@ Next Steps
         - No
 - [x] Check how other optimization algorithms perform
     - [x] CMOPSO implemeted
-- Implement constraints
+- [x] Implement constraints
     - On geometry to check validity ex: thickness constraint
-    - On aero param for performance specification
-    - Future work
+        - [x] Implemented intersection check
+        - [x] Implement hump check
+            - Not sure how this could be implemented. The humps are kind of irregular in the way they parsec creates them,
+                sometimes its an obvious hump where you have 2 local maxima and a dip on either side, other times
+                the surface crests, flattens out and then crests again. 
+            - I also think that these airfoils would be worse performing in my objectives anyway, so they should get filtered 
+                out (ideally)
+    - [x] On aero param for performance specification
+        - [x] Implement Cl and window constraint
 
 Notes
 ------
-- I removed single objective optimisation since I think it would produce unphysical designs most of the time
-- I did not allow for the optimizer to start from an initial airfoil and then explore the space around it. pymoo
-    Does not have a clean implementation for this. You can specify your bounds around the airfoil you have in mind
-    and then compare the results in post processing
-- The slowdown is NOT due to Xvfb. Its just because of my ASEQ range 0 20 0.5
 - With `verbose=True`, you will see $\epsilon$ in the console. This is the value compared against the threshold
     for determination of termination. 
     $\epsilon = max(delta_{ideal}, delta_{nadir}, delta_{f})$. 
@@ -103,3 +105,21 @@ go next. Unlike evollutionary algos, it cannot bring in random mutation to try a
 failing designs. If an XFOIL eval fails for a point, it is unlikely that its associated particle in the swarm
 will be able to improve much. So, you should really stick to algos like NSGA2, or other GAs
 
+23-12-25
+--------
+For some reason, calling xfoil in the jupyter notebook on the pareto airfoils does not work. I tried
+running XFOIL from the command line on the desired pareto foil and it doesn't work either. However,
+running the same file on xflr5 on my windows side seems to work. Why is this? I don't know. The main
+optimizer is based on XFOIL, and its apparently able to "solve" the airfoil flow during the opt run,
+but fails when I try to do the same airfoil calc individually.
+
+If this happens, just use xflr5 on windows.
+
+V4 finished on 23-12-25. With this I think I'm done with the major code for the script. My initial goals
+were to get a better understanding of black box optimisation and scripting, and I think i've achieved that.
+I might try and improve one of the airfoils on the pareto front to see if i can make an improvement (This
+is the main use case i envisioned; you'd use the script to get a front of foils better than your input,
+then you modify those to get an even better foil). update - No, I'm not going to do the inverse design.
+Inverse airfoil design is complex enough to be its own project, so I won't get into it here.
+
+With this, I'd say the project is done. All I now need to do is make a doc file and a graphic summary
