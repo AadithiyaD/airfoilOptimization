@@ -8,6 +8,8 @@ operational window.
 
 Tested and developed on Ubuntu 22.04.
 
+![Script Overview](airfoil-opt-summary.svg)
+
 Usage
 -----
 Run ```airfoilOpt.py```. Parameters for XFOIL analysis and optimizer can be changed in ```src/config.py```
