@@ -8,21 +8,24 @@ operational window.
 
 Tested and developed on Ubuntu 22.04.
 
+## Summary
 ![Script Overview](project-summary.jpg)
 
-Usage
------
+*Note - Base $Cl_{max}$ and operational window of NACA0012 are taken as 1.2 and 4.5 degs respectively*
+
+## Usage
 Run ```airfoilOpt.py```. Parameters for XFOIL analysis and optimizer can be changed in ```src/config.py```
 
 The ```postProcess_data``` dir has sample pkl files that can be used with ```postProc_Multi.ipynb``` to visualize its results
 
-Requirements
-------------
+## Requirements
 ```pip install -r requirements.txt```
 
 Requires XFOIL, xvfb and Xlaunch. Can be installed through 
-```sudo apt-get update```
-```sudo apt-get install xvfb```
-```sudo apt install xfoil```
+```bash
+sudo apt-get update
+sudo apt-get install xvfb   
+sudo apt install xfoil
+```
 and Xlaunch can be installed through [Xming](https://sourceforge.net/projects/xming/)
 
